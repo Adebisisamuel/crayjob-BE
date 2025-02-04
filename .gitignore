@@ -1,0 +1,7 @@
+.env
+node_modules/
+
+
+# Ignore other sensitive or unnecessary files
+.DS_Store
+npm-debug.log
