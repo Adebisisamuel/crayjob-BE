@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDb from "./config/db";
 import userRoute from "./routes/userRoute";
+import ticketRoute from "./routes/ticketRoute";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());
 
 //Routes
 app.use("/users", userRoute);
+app.use("/ticket", ticketRoute);
 
 app.get("/", (req, res) => {
   res.send("CrayJob API is running!");
