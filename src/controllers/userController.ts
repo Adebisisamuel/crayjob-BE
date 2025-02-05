@@ -20,10 +20,9 @@ export const registerUser = async (req: Request, res: Response) => {
       return;
     }
     const hashPassword = await bcrypt.hash(password, 10);
-    const verificationCode = crypto
-      .randomBytes(3)
-      .toString("hex")
-      .toUpperCase();
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
     const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = new User({
@@ -35,8 +34,8 @@ export const registerUser = async (req: Request, res: Response) => {
       verificationExpiresAt,
       isVerified: false,
     });
-    await sendActivationEmail(user.email, verificationCode);
     await user.save();
+    await sendActivationEmail(user.email, verificationCode);
     console.log("New User", user);
 
     res

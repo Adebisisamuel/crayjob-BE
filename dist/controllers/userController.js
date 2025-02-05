@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loginUser = exports.resendVerificationCode = exports.verifyEmail = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const crypto_1 = __importDefault(require("crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const responseHandler_1 = require("../utils/responseHandler");
@@ -32,10 +31,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return;
         }
         const hashPassword = yield bcryptjs_1.default.hash(password, 10);
-        const verificationCode = crypto_1.default
-            .randomBytes(3)
-            .toString("hex")
-            .toUpperCase();
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
         const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
         const user = new userModel_1.default({
             firstName,
@@ -46,8 +42,8 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             verificationExpiresAt,
             isVerified: false,
         });
-        yield (0, sendActivationEmail_1.sendActivationEmail)(user.email, verificationCode);
         yield user.save();
+        yield (0, sendActivationEmail_1.sendActivationEmail)(user.email, verificationCode);
         console.log("New User", user);
         res
             .status(200)

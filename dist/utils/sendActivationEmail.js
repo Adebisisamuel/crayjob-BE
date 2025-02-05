@@ -14,36 +14,63 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendActivationEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const userModel_1 = __importDefault(require("../models/userModel"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const transporter = nodemailer_1.default.createTransport({
     service: "gmail",
     auth: {
-        user: "bensoneniola097@gmail.com",
-        pass: "ixvakgglqddojliv",
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASSWORD,
     },
 });
-const generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-};
 const sendActivationEmail = (email, verificationCode) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const verificationCode = generateVerificationCode();
-        yield userModel_1.default.findOneAndUpdate({ email }, {
-            verificationCode,
-            verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        }, { new: true } // 👈 Ensures it updates the database
-        );
         yield transporter.sendMail({
-            from: `"CrayJobs" <bensoneniola097@gmail.com>`,
+            from: `"CrayJobs" <${process.env.MAIL_USER}>`,
             to: email,
             subject: "Your Verification Code",
             html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>
-             <p>This code will expire in 10 minutes.</p>`,
+               <p>This code will expire in 10 minutes.</p>`,
         });
-        console.log(` Verification code sent to ${email}`);
+        console.log(`Verification code sent to ${email}`);
     }
     catch (error) {
         console.error("Error sending verification email:", error);
     }
 });
 exports.sendActivationEmail = sendActivationEmail;
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.MAIL_USER,
+//     pass: process.env.MAIL_PASSWORD,
+//   },
+// });
+// const generateVerificationCode = () => {
+//   return Math.floor(100000 + Math.random() * 900000).toString();
+// };
+// export const sendActivationEmail = async (
+//   email: string,
+//   verificationCode: string
+// ) => {
+//   try {
+//     const verificationCode = generateVerificationCode();
+//     await User.findOneAndUpdate(
+//       { email },
+//       {
+//         verificationCode,
+//         verificationCodeExpires: new Date(Date.now() + 10 * 60 * 1000),
+//       }
+//     );
+//     await transporter.sendMail({
+//       from: `"CrayJobs" <${process.env.MAIL_USER}>`,
+//       to: email,
+//       subject: "Your Verification Code",
+//       html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>
+//              <p>This code will expire in 10 minutes.</p>`,
+//     });
+//     console.log(` Verification code sent to ${email}`);
+//   } catch (error) {
+//     console.error("Error sending verification email:", error);
+//   }
+// };
