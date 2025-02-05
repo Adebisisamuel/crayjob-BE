@@ -25,8 +25,9 @@ export const sendActivationEmail = async (
       { email },
       {
         verificationCode,
-        verificationCodeExpires: new Date(Date.now() + 10 * 60 * 1000),
-      }
+        verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+      { new: true } // 👈 Ensures it updates the database
     );
 
     await transporter.sendMail({

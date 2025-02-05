@@ -35,8 +35,8 @@ export const registerUser = async (req: Request, res: Response) => {
       verificationExpiresAt,
       isVerified: false,
     });
-    await user.save();
     await sendActivationEmail(user.email, verificationCode);
+    await user.save();
     console.log("New User", user);
 
     res
