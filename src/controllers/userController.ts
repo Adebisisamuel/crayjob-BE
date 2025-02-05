@@ -20,7 +20,11 @@ export const registerUser = async (req: Request, res: Response) => {
       return;
     }
     const hashPassword = await bcrypt.hash(password, 10);
-    const verificationCode = crypto.randomBytes(32).toString("hex");
+    const verificationCode = crypto
+      .randomBytes(3)
+      .toString("hex")
+      .toUpperCase();
+    const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = new User({
       firstName,
@@ -28,6 +32,7 @@ export const registerUser = async (req: Request, res: Response) => {
       email,
       password: hashPassword,
       verificationCode,
+      verificationExpiresAt,
       isVerified: false,
     });
     await user.save();

@@ -1,12 +1,15 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 import crypto from "crypto";
 import User from "../models/userModel";
+
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "bensoneniola097@gmail.com",
-    pass: "ixvakgglqddojliv",
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASSWORD,
   },
 });
 
@@ -30,7 +33,7 @@ export const sendActivationEmail = async (
     );
 
     await transporter.sendMail({
-      from: `"CrayJobs" <bensoneniola097@gmail.com>`,
+      from: `"CrayJobs" <${process.env.MAIL_USER}>`,
       to: email,
       subject: "Your Verification Code",
       html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>
