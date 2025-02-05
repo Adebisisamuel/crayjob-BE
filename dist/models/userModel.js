@@ -25,6 +25,17 @@ const userSchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationCode: {
+        type: String,
+        default: null,
+    },
+    verificationExpiresAt: {
+        type: Date,
+    },
 }, { timestamps: true });
 const User = mongoose_1.default.model("User", userSchema);
 exports.default = User;

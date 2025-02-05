@@ -12,11 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginUser = exports.registerUser = void 0;
+exports.loginUser = exports.resendVerificationCode = exports.verifyEmail = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const crypto_1 = __importDefault(require("crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const responseHandler_1 = require("../utils/responseHandler");
+const sendActivationEmail_1 = require("../utils/sendActivationEmail");
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { firstName, surname, email, password } = req.body;
@@ -30,13 +32,23 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return;
         }
         const hashPassword = yield bcryptjs_1.default.hash(password, 10);
+        const verificationCode = crypto_1.default
+            .randomBytes(3)
+            .toString("hex")
+            .toUpperCase();
+        const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
         const user = new userModel_1.default({
             firstName,
             surname,
             email,
             password: hashPassword,
+            verificationCode,
+            verificationExpiresAt,
+            isVerified: false,
         });
+        yield (0, sendActivationEmail_1.sendActivationEmail)(user.email, verificationCode);
         yield user.save();
+        console.log("New User", user);
         res
             .status(200)
             .json({ success: true, message: "User registered Successfully", user });
@@ -48,6 +60,73 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.registerUser = registerUser;
+const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, code } = req.body;
+        const user = yield userModel_1.default.findOne({ email });
+        if (!user) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("User not found"));
+            return;
+        }
+        if (!user.verificationCode || !user.verificationExpiresAt) {
+            res
+                .status(400)
+                .json((0, responseHandler_1.errorResponse)("Verification code expired or invalid"));
+            return;
+        }
+        if (user.verificationCode === String(code)) {
+            if (new Date() > user.verificationExpiresAt) {
+                res.status(400).json((0, responseHandler_1.errorResponse)("Verification code has expired"));
+                return;
+            }
+            user.isVerified = true;
+            user.verificationCode = "";
+            user.verificationExpiresAt = null;
+            yield user.save();
+            res.status(200).json((0, responseHandler_1.successResponse)("Email successfully verified"));
+            return;
+        }
+        else {
+            res
+                .status(400)
+                .json((0, responseHandler_1.errorResponse)("Invalid or incorrect verification code"));
+            return;
+        }
+    }
+    catch (error) {
+        console.error("Error verifying email", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+        return;
+    }
+});
+exports.verifyEmail = verifyEmail;
+const resendVerificationCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email } = req.body;
+        const user = yield userModel_1.default.findOne({ email });
+        if (!user) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("User not found"));
+            return;
+        }
+        if (user.isVerified) {
+            res.status(400).json((0, responseHandler_1.errorResponse)("User is already verified"));
+            return;
+        }
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.verificationCode = verificationCode;
+        user.verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        yield user.save();
+        yield (0, sendActivationEmail_1.sendActivationEmail)(email, verificationCode);
+        res
+            .status(200)
+            .json((0, responseHandler_1.successResponse)("Verification Code resent successfully"));
+    }
+    catch (error) {
+        console.log("Error sending verification Code");
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.resendVerificationCode = resendVerificationCode;
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
@@ -59,6 +138,10 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const isMatch = yield bcryptjs_1.default.compare(password, user.password);
         if (!isMatch) {
             res.status(400).json((0, responseHandler_1.errorResponse)("Invalid credentials"));
+            return;
+        }
+        if (user.isVerified === false) {
+            res.status(400).json((0, responseHandler_1.errorResponse)("Please Verify Your Email"));
             return;
         }
         const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, {
