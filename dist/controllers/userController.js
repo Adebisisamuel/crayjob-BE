@@ -27,8 +27,25 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         const existingUser = yield userModel_1.default.findOne({ email });
         if (existingUser) {
-            res.status(400).json((0, responseHandler_1.errorResponse)("user already exist"));
-            return;
+            if (!existingUser.isVerified) {
+                const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                existingUser.verificationCode = verificationCode;
+                existingUser.verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+                yield existingUser.save();
+                yield (0, sendActivationEmail_1.sendActivationEmail)(existingUser.email, verificationCode);
+                res
+                    .status(200)
+                    .json({
+                    success: true,
+                    message: "OTP resent to email",
+                    user: existingUser,
+                });
+                return;
+            }
+            else {
+                res.status(400).json((0, responseHandler_1.errorResponse)("User already exists"));
+                return;
+            }
         }
         const hashPassword = yield bcryptjs_1.default.hash(password, 10);
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();

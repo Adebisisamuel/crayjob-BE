@@ -15,9 +15,31 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     const existingUser = await User.findOne({ email });
+
     if (existingUser) {
-      res.status(400).json(errorResponse("user already exist"));
-      return;
+      if (!existingUser.isVerified) {
+        const verificationCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+        existingUser.verificationCode = verificationCode;
+        existingUser.verificationExpiresAt = new Date(
+          Date.now() + 10 * 60 * 1000
+        );
+        await existingUser.save();
+
+        await sendActivationEmail(existingUser.email, verificationCode);
+        res
+          .status(200)
+          .json({
+            success: true,
+            message: "OTP resent to email",
+            user: existingUser,
+          });
+        return;
+      } else {
+        res.status(400).json(errorResponse("User already exists"));
+        return;
+      }
     }
     const hashPassword = await bcrypt.hash(password, 10);
     const verificationCode = Math.floor(
