@@ -40,6 +40,11 @@ const ResumeSchema = new mongoose_1.Schema({
         ref: "User",
         required: true,
     },
+    ticketId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Ticket",
+        required: true,
+    },
     filename: {
         type: String,
         required: true,
@@ -51,6 +56,15 @@ const ResumeSchema = new mongoose_1.Schema({
     uploadedAt: {
         type: Date,
         default: Date.now,
+    },
+    name: {
+        type: String,
+    },
+    email: {
+        type: String,
+    },
+    phone: {
+        type: String,
     },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("Resume", ResumeSchema);

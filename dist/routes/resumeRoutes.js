@@ -8,5 +8,5 @@ const resumeController_1 = require("../controllers/resumeController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
 router.post("/upload", authMiddleware_1.authenticateUser, resumeController_1.uploadMiddleware, resumeController_1.uploadResumes);
-router.post("/extract-resumes", resumeController_1.extractResumesDetails);
+// router.post("/extract-resumes", extractResumesDetails);
 exports.default = router;
