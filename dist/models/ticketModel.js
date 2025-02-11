@@ -57,3 +57,4 @@ const ticketSchema = new mongoose_1.Schema({
     },
 }, { timestamps: true });
 exports.Ticket = mongoose_1.default.model("Ticket", ticketSchema);
+exports.default = exports.Ticket;

@@ -1,84 +1,145 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import multer from "multer";
-import { AuthRequest } from "../Types/authTypes";
-import Resume from "../models/resumeModel";
+import AWS from "aws-sdk";
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
+import ResumeModel from "../models/resumeModel";
+import TicketModel from "../models/ticketModel";
+import { extractCandidateDetails } from "../utils/resumeParser";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary";
+import { AuthRequest } from "../Types/authTypes";
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "resumes",
-    resource_type: "raw",
-  } as unknown as { folder: string; resource_type: string },
+// Configure AWS S3
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
-const upload = multer({ storage });
-
-export const uploadMiddleware = upload.array("resumes", 50);
+// Set up Multer storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage }).array("resumes", 50);
 
 export const uploadResumes = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user || !req.user.id) {
-      res.status(401).json(errorResponse("Unauthorized: User not found"));
+    upload(req, res, async (err: any) => {
+      if (err)
+        return res
+          .status(500)
+          .json({ message: "File upload failed", error: err });
+
+      const { ticketId } = req.body;
+      console.log("Received Ticket ID:", ticketId);
+      console.log("Authenticated User ID:", req.user!.id);
+      if (!ticketId) {
+        res.status(400).json(errorResponse("TicketId is Required"));
+        return;
+      }
+      const ticket = await TicketModel.find({
+        _id: ticketId,
+        userId: req.user!.id,
+      });
+      if (!ticket) {
+        res.status(404).json(errorResponse("Ticket not found or Unauthorized"));
+        return;
+      }
+      console.log("Ticket Found:", ticket);
+
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0)
+        return res.status(400).json(errorResponse("No files uploaded"));
+
+      const recruiterId = req.user!.id;
+      const uploadedResumes = [];
+
+      for (const file of files) {
+        try {
+          const fileBuffer = file.buffer;
+          const fileName = `${Date.now()}-${file.originalname}`;
+          const fileExtension = file.originalname
+            .split(".")
+            .pop()
+            ?.toLowerCase();
+
+          // Upload file to AWS S3
+          const uploadParams = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME!,
+            Key: `resumes/${fileName}`,
+            Body: fileBuffer,
+            ContentType: file.mimetype,
+          };
+          const s3Upload = await s3.upload(uploadParams).promise();
+          const fileUrl = s3Upload.Location;
+
+          let extractedText = "";
+
+          if (fileExtension === "pdf") {
+            extractedText = (await pdfParse(fileBuffer)).text;
+          } else if (fileExtension === "docx") {
+            extractedText = (
+              await mammoth.extractRawText({ buffer: fileBuffer })
+            ).value;
+          } else {
+            console.warn(`Skipping unsupported file: ${file.originalname}`);
+            continue;
+          }
+
+          console.log("Extracted Resume Text:", extractedText);
+
+          const { name, email, phone } = await extractCandidateDetails(
+            extractedText
+          );
+
+          // Save resume details in MongoDB
+          const newResume = new ResumeModel({
+            userId: recruiterId,
+            ticketId,
+            filename: file.originalname,
+            fileUrl,
+            name,
+            email,
+            phone,
+          });
+
+          await newResume.save();
+          uploadedResumes.push(newResume);
+        } catch (fileError) {
+          console.error(
+            `Error processing file ${file.originalname}:`,
+            fileError
+          );
+          continue;
+        }
+      }
+
+      res.status(201).json({
+        message: "Resumes uploaded successfully",
+        data: uploadedResumes,
+      });
       return;
-    }
-
-    const { ticketId } = req.body;
-
-    if (!ticketId) {
-      res.status(400).json(errorResponse("Ticket ID is required"));
-      return;
-    }
-
-    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-      res.status(400).json(errorResponse("No resumes uploaded"));
-      return;
-    }
-
-    const existingResumesCount = await Resume.countDocuments({ ticketId });
-    if (existingResumesCount + req.files.length > 50) {
-      res
-        .status(400)
-        .json(errorResponse("Cannot upload more than 50 resumes per ticket"));
-      return;
-    }
-
-    const uploadedFiles = await Promise.all(
-      (req.files as Express.Multer.File[]).map(async (file) => {
-        const fileExtension = file.originalname.split(".").pop();
-        const publicId = `resumes/${
-          file.filename
-        }-${Date.now()}.${fileExtension}`;
-
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "resumes",
-          resource_type: "raw",
-          public_id: publicId,
-          format: fileExtension,
-        });
-
-        return {
-          userId: req.user!.id,
-          ticketId,
-          filename: file.originalname,
-          fileUrl: result.secure_url,
-        };
-      })
-    );
-
-    const savedResumes = await Resume.insertMany(uploadedFiles);
-
-    res
-      .status(201)
-      .json(successResponse("Resumes uploaded successfully", savedResumes));
-    return;
+    });
   } catch (error) {
-    console.error("Error uploading resumes:", error);
-    res.status(500).json(errorResponse("Upload failed"));
+    console.error("Upload error:", error);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };
 
-export const getResumesByTicket = async (req: AuthRequest, res: Response) => {};
+// export const getResumesByTicket = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const { ticketId } = req.params;
+
+//     if (!ticketId) {
+//       res.status(400).json(errorResponse("Ticket ID is required"));
+//       return;
+//     }
+//     const resumes = await Resume.find({ ticketId });
+//     res
+//       .status(200)
+//       .json(successResponse("Resumes retrieved successfully", resumes));
+//     return;
+//   } catch (error) {
+//     console.log("Error fetching Resume", error);
+//     res.status(500).json(errorResponse("Internal Server Error"));
+//   }
+// };

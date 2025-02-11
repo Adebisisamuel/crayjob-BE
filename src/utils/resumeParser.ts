@@ -1,74 +1,52 @@
-// import pdfParse from "pdf-parse";
-// import * as textract from "textract";
+import OpenAI from "openai";
 
-// interface ResumeDetails {
-//   name: string | null;
-//   email: string | null;
-//   phone: string | null;
-// }
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// /**
-//  * Extracts text from a given file (PDF, DOCX, or TXT)
-//  * @param filePath - The path of the resume file
-//  * @returns Extracted text from the file
-//  */
-// const extractText = async (filePath: string): Promise<string> => {
-//   const ext = filePath.split(".").pop()?.toLowerCase();
+export const extractCandidateDetails = async (text: string) => {
+  try {
+    const prompt = `
+      Extract the full name, email, and phone number of the candidate from the following resume text.
+      
+      - Ensure the name is the actual candidate's name, NOT an address, skill, or company name.
+      - If multiple names exist, choose the one that appears under "Name" or "Personal Information."
+      - Provide the response strictly in JSON format.
 
-//   if (!ext) throw new Error("Invalid file extension");
+      Resume Text:
+      """ 
+      ${text} 
+      """
 
-//   if (ext === "pdf") {
-//     const data = await pdfParse(filePath);
-//     return data.text;
-//   } else if (ext === "doc" || ext === "docx" || ext === "txt") {
-//     return new Promise((resolve, reject) => {
-//       textract.fromFileWithPath(filePath, (error: any, text: any) => {
-//         if (error) {
-//           reject(error);
-//         } else {
-//           resolve(text || "");
-//         }
-//       });
-//     });
-//   } else {
-//     throw new Error("Unsupported file format");
-//   }
-// };
+      Example JSON output:
+      {
+        "name": "John Doe",
+        "email": "johndoe@gmail.com",
+        "phone": "+1 123 456 7890"
+      }
+    `;
 
-// /**
-//  * Extracts key details (name, email, phone) from resume text
-//  * @param text - Extracted text from the resume
-//  * @returns Parsed resume details
-//  */
-// const parseDetails = (text: string): ResumeDetails => {
-//   const emailRegex = /[\w.-]+@[\w.-]+\.\w+/g;
-//   const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?)?\d{3}[-.\s]?\d{3,4}/g;
-//   const nameRegex = /(?<=\bName[:\s]*)[A-Z][a-z]+\s[A-Z][a-z]+/g; // Basic pattern for names
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "system", content: prompt }],
+      temperature: 0.1,
+    });
 
-//   const emails = text.match(emailRegex) || [];
-//   const phones = text.match(phoneRegex) || [];
-//   const names = text.match(nameRegex) || [];
+    const content = response.choices[0]?.message?.content?.trim();
 
-//   return {
-//     name: names.length > 0 ? names[0] : null,
-//     email: emails.length > 0 ? emails[0] : null,
-//     phone: phones.length > 0 ? phones[0] : null,
-//   };
-// };
+    if (!content) {
+      throw new Error("Empty response from OpenAI");
+    }
 
-// /**
-//  * Parses a resume file to extract relevant details
-//  * @param filePath - The path of the resume file
-//  * @returns Parsed details (name, email, phone)
-//  */
-// const parseFile = async (filePath: string): Promise<ResumeDetails> => {
-//   try {
-//     const text = await extractText(filePath);
-//     return parseDetails(text);
-//   } catch (error) {
-//     console.error("Error parsing resume:", error);
-//     return { name: null, email: null, phone: null };
-//   }
-// };
+    const parsedData = JSON.parse(content);
 
-// export default parseFile;
+    return {
+      name: parsedData.name || "",
+      email: parsedData.email || "",
+      phone: parsedData.phone || "",
+    };
+  } catch (error) {
+    console.error("Error extracting candidate details:", error);
+    return { name: "", email: "", phone: "" };
+  }
+};
