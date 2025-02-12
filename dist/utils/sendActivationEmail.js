@@ -26,7 +26,7 @@ const transporter = nodemailer_1.default.createTransport({
 const sendActivationEmail = (email, verificationCode) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield transporter.sendMail({
-            from: `"CrayJobs" <${process.env.MAIL_USER}>`,
+            from: `"CrayHunt" <${process.env.MAIL_USER}>`,
             to: email,
             subject: "Your Verification Code",
             html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>

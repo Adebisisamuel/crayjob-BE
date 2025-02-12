@@ -9,4 +9,5 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
 router.post("/upload", authMiddleware_1.authenticateUser, resumeController_1.uploadResumes);
 // router.get("/get-resumes/:ticketId", authenticateUser, getResumesByTicket);
+router.get("/get-candidates/:jobId", authMiddleware_1.authenticateUser, resumeController_1.getCandidateByJobs);
 exports.default = router;

@@ -12,15 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadResumes = void 0;
+exports.getCandidateByJobs = exports.uploadResumes = void 0;
 const multer_1 = __importDefault(require("multer"));
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const pdf_parse_1 = __importDefault(require("pdf-parse"));
 const mammoth_1 = __importDefault(require("mammoth"));
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
-const ticketModel_1 = __importDefault(require("../models/ticketModel"));
+const jobModel_1 = __importDefault(require("../models/jobModel"));
 const resumeParser_1 = require("../utils/resumeParser");
 const responseHandler_1 = require("../utils/responseHandler");
+const mongoose_1 = __importDefault(require("mongoose"));
 // Configure AWS S3
 const s3 = new aws_sdk_1.default.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -38,15 +39,15 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 return res
                     .status(500)
                     .json({ message: "File upload failed", error: err });
-            const { ticketId } = req.body;
-            console.log("Received Ticket ID:", ticketId);
+            const { jobId } = req.body;
+            console.log("Received Ticket ID:", jobId);
             console.log("Authenticated User ID:", req.user.id);
-            if (!ticketId) {
+            if (!jobId) {
                 res.status(400).json((0, responseHandler_1.errorResponse)("TicketId is Required"));
                 return;
             }
-            const ticket = yield ticketModel_1.default.find({
-                _id: ticketId,
+            const ticket = yield jobModel_1.default.find({
+                _id: jobId,
                 userId: req.user.id,
             });
             if (!ticket) {
@@ -91,7 +92,7 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     // Save resume details in MongoDB
                     const newResume = new resumeModel_1.default({
                         userId: recruiterId,
-                        ticketId,
+                        jobId,
                         filename: file.originalname,
                         fileUrl,
                         name,
@@ -137,3 +138,25 @@ exports.uploadResumes = uploadResumes;
 //     res.status(500).json(errorResponse("Internal Server Error"));
 //   }
 // };
+const getCandidateByJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { jobId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
+            res.status(400).json({ message: "Invalid Ticket ID format" });
+            return;
+        }
+        const candidates = yield resumeModel_1.default.find({ jobId }).select("name email phone");
+        if (candidates.length === 0) {
+            res.status(404).json({ message: "No candidates found for this ticket" });
+            return;
+        }
+        res.status(200).json({ candidates });
+        return;
+    }
+    catch (error) {
+        console.error("Error fetching candidates:", error);
+        res.status(500).json({ message: "Internal server error" });
+        return;
+    }
+});
+exports.getCandidateByJobs = getCandidateByJobs;

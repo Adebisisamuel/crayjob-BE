@@ -18,7 +18,13 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use((0, helmet_1.default)());
 app.use((0, morgan_1.default)("dev"));
-app.use(express_1.default.json());
+// app.use(express.json());
+app.use((req, res, next) => {
+    if (req.method === "GET") {
+        return next();
+    }
+    express_1.default.json()(req, res, next);
+});
 //Routes
 app.use("/users", userRoute_1.default);
 app.use("/ticket", ticketRoute_1.default);

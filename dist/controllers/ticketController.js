@@ -9,111 +9,109 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTicket = exports.updateTicket = exports.getTicket = exports.getAllTicket = exports.createTicket = void 0;
-const ticketModel_1 = require("../models/ticketModel");
+exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
+const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
-const createTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { jobTitle, jobDescription, screeningQuestions } = req.body;
         if (!req.user) {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const ticket = new ticketModel_1.Ticket({
+        const job = new jobModel_1.Job({
             user: req.user.id,
             jobTitle,
             jobDescription,
             screeningQuestions,
         });
-        yield ticket.save();
-        res
-            .status(201)
-            .json((0, responseHandler_1.successResponse)("Ticket created successfully", ticket));
+        yield job.save();
+        res.status(201).json((0, responseHandler_1.successResponse)("Job created successfully", job));
     }
     catch (error) {
-        console.error("Error creating ticket:", error);
+        console.error("Error creating job:", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
     }
 });
-exports.createTicket = createTicket;
-const getAllTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createJob = createJob;
+const getAllJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.user) {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const tickets = yield ticketModel_1.Ticket.find({ user: req.user.id }).populate("user", "firstName surname email");
-        res.json((0, responseHandler_1.successResponse)("All tickets retrieved successfully", tickets));
+        const jobs = yield jobModel_1.Job.find({ user: req.user.id }).populate("user", "firstName surname email");
+        res.json((0, responseHandler_1.successResponse)("All jobs retrieved successfully", jobs));
     }
     catch (error) {
-        console.log("Error retrieving tickets", error);
+        console.log("Error retrieving jobs", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
     }
 });
-exports.getAllTicket = getAllTicket;
-const getTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllJob = getAllJob;
+const getJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.user) {
             res.status(400).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const ticket = yield ticketModel_1.Ticket.findOne({
+        const job = yield jobModel_1.Job.findOne({
             _id: req.params.id,
             user: req.user.id,
         });
-        if (!ticket) {
-            res.status(400).json((0, responseHandler_1.errorResponse)("Ticket not found or Unauthorized"));
+        if (!job) {
+            res.status(400).json((0, responseHandler_1.errorResponse)("Job not found or Unauthorized"));
             return;
         }
-        res.json((0, responseHandler_1.successResponse)("Ticket retrieved successfully", ticket));
+        res.json((0, responseHandler_1.successResponse)("Job retrieved successfully", job));
     }
     catch (error) {
-        console.log("Error getting ticket", error);
+        console.log("Error getting job", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
     }
 });
-exports.getTicket = getTicket;
-const updateTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getJob = getJob;
+const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.user) {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const ticket = yield ticketModel_1.Ticket.findOneAndUpdate({
+        const job = yield jobModel_1.Job.findOneAndUpdate({
             _id: req.params.id,
             user: req.user.id,
         }, { $set: req.body }, { new: true, runValidators: true });
-        if (!ticket) {
+        if (!job) {
             res.status(404).json((0, responseHandler_1.errorResponse)("Ticket not found or unauthorized"));
         }
-        res.json((0, responseHandler_1.successResponse)("Ticket Updated Successfully", ticket));
+        res.json((0, responseHandler_1.successResponse)("Job Updated Successfully", job));
         return;
     }
     catch (error) {
-        console.log("Error Updating Ticket", error);
+        console.log("Error Updating Job", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
     }
 });
-exports.updateTicket = updateTicket;
-const deleteTicket = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateJob = updateJob;
+const deleteJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.user) {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const ticket = yield ticketModel_1.Ticket.findOneAndDelete({
+        const job = yield jobModel_1.Job.findOneAndDelete({
             _id: req.params.id,
             user: req.user.id,
         });
-        if (!ticket) {
-            res.status(404).json((0, responseHandler_1.errorResponse)("Ticket not found or unauthorized"));
+        if (!job) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("Job not found or unauthorized"));
         }
-        res.status(200).json((0, responseHandler_1.successResponse)("Ticket Deleted Successfully"));
+        res.status(200).json((0, responseHandler_1.successResponse)("Job Deleted Successfully"));
     }
     catch (error) {
-        console.log("Error deleteing Ticket", error);
+        console.log("Error deleteing Job", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
         return;
     }
 });
-exports.deleteTicket = deleteTicket;
+exports.deleteJob = deleteJob;

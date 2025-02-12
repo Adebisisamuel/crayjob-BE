@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface ITicket extends Document {
+export interface IJob extends Document {
   user: mongoose.Schema.Types.ObjectId;
   jobTitle: string;
   jobDescription: string;
@@ -9,7 +9,7 @@ export interface ITicket extends Document {
   updatedAt?: Date;
 }
 
-const ticketSchema = new Schema<ITicket>(
+const jobSchema = new Schema<IJob>(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,5 +34,5 @@ const ticketSchema = new Schema<ITicket>(
   { timestamps: true }
 );
 
-export const Ticket = mongoose.model<ITicket>("Ticket", ticketSchema);
-export default Ticket;
+export const Job = mongoose.model<IJob>("Job", jobSchema);
+export default Job;

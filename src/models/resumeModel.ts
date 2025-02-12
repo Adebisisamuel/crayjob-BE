@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IResume extends Document {
   userId: mongoose.Types.ObjectId;
-  ticketId: mongoose.Types.ObjectId;
+  jobId: mongoose.Types.ObjectId;
   filename: string;
   fileUrl: string;
   uploadedAt: Date;
@@ -19,9 +19,9 @@ const ResumeSchema = new Schema<IResume>(
       required: true,
     },
 
-    ticketId: {
+    jobId: {
       type: Schema.Types.ObjectId,
-      ref: "Ticket",
+      ref: "Job",
       required: true,
     },
 

@@ -33,38 +33,28 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const ResumeSchema = new mongoose_1.Schema({
-    userId: {
-        type: mongoose_1.Schema.Types.ObjectId,
+const jobSchema = new mongoose_1.Schema({
+    user: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
-    jobId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Job",
-        required: true,
-    },
-    filename: {
+    jobTitle: {
         type: String,
         required: true,
+        trim: true,
     },
-    fileUrl: {
+    jobDescription: {
         type: String,
         required: true,
+        trim: true,
     },
-    uploadedAt: {
-        type: Date,
-        default: Date.now,
-    },
-    name: {
-        type: String,
-    },
-    email: {
-        type: String,
-    },
-    phone: {
-        type: String,
+    screeningQuestions: {
+        type: [String],
+        required: true,
     },
 }, { timestamps: true });
-exports.default = mongoose_1.default.model("Resume", ResumeSchema);
+exports.Job = mongoose_1.default.model("Job", jobSchema);
+exports.default = exports.Job;

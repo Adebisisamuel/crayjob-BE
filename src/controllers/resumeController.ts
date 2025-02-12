@@ -4,10 +4,11 @@ import AWS from "aws-sdk";
 import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 import ResumeModel from "../models/resumeModel";
-import TicketModel from "../models/ticketModel";
+import JobModel from "../models/jobModel";
 import { extractCandidateDetails } from "../utils/resumeParser";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import { AuthRequest } from "../Types/authTypes";
+import mongoose from "mongoose";
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -28,15 +29,15 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
           .status(500)
           .json({ message: "File upload failed", error: err });
 
-      const { ticketId } = req.body;
-      console.log("Received Ticket ID:", ticketId);
+      const { jobId } = req.body;
+      console.log("Received Ticket ID:", jobId);
       console.log("Authenticated User ID:", req.user!.id);
-      if (!ticketId) {
+      if (!jobId) {
         res.status(400).json(errorResponse("TicketId is Required"));
         return;
       }
-      const ticket = await TicketModel.find({
-        _id: ticketId,
+      const ticket = await JobModel.find({
+        _id: jobId,
         userId: req.user!.id,
       });
       if (!ticket) {
@@ -93,7 +94,7 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
           // Save resume details in MongoDB
           const newResume = new ResumeModel({
             userId: recruiterId,
-            ticketId,
+            jobId,
             filename: file.originalname,
             fileUrl,
             name,
@@ -143,3 +144,30 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
 //     res.status(500).json(errorResponse("Internal Server Error"));
 //   }
 // };
+
+export const getCandidateByJobs = async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      res.status(400).json({ message: "Invalid Ticket ID format" });
+      return;
+    }
+
+    const candidates = await ResumeModel.find({ jobId }).select(
+      "name email phone"
+    );
+
+    if (candidates.length === 0) {
+      res.status(404).json({ message: "No candidates found for this ticket" });
+      return;
+    }
+
+    res.status(200).json({ candidates });
+    return;
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+};

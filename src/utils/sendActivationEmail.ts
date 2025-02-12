@@ -19,7 +19,7 @@ export const sendActivationEmail = async (
 ) => {
   try {
     await transporter.sendMail({
-      from: `"CrayJobs" <${process.env.MAIL_USER}>`,
+      from: `"CrayHunt" <${process.env.MAIL_USER}>`,
       to: email,
       subject: "Your Verification Code",
       html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>

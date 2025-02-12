@@ -8,21 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractCandidateDetails = void 0;
-const openai_1 = __importDefault(require("openai"));
-const openai = new openai_1.default({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+const generative_ai_1 = require("@google/generative-ai");
+const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
     try {
         const prompt = `
       Extract the full name, email, and phone number of the candidate from the following resume text.
-      
+
       - Ensure the name is the actual candidate's name, NOT an address, skill, or company name.
       - If multiple names exist, choose the one that appears under "Name" or "Personal Information."
       - Provide the response strictly in JSON format.
@@ -39,15 +33,11 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
         "phone": "+1 123 456 7890"
       }
     `;
-        const response = yield openai.chat.completions.create({
-            model: "gpt-4",
-            messages: [{ role: "system", content: prompt }],
-            temperature: 0.1,
-        });
-        const content = (_c = (_b = (_a = response.choices[0]) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.trim();
-        if (!content) {
-            throw new Error("Empty response from OpenAI");
-        }
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Use Gemini Pro model
+        const result = yield model.generateContent(prompt);
+        const content = result.response.text();
+        if (!content)
+            throw new Error("Empty response from Gemini");
         const parsedData = JSON.parse(content);
         return {
             name: parsedData.name || "",
@@ -61,3 +51,45 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.extractCandidateDetails = extractCandidateDetails;
+// import OpenAI from "openai";
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
+// export const extractCandidateDetails = async (text: string) => {
+//   try {
+//     const prompt = `
+//       Extract the full name, email, and phone number of the candidate from the following resume text.
+//       - Ensure the name is the actual candidate's name, NOT an address, skill, or company name.
+//       - If multiple names exist, choose the one that appears under "Name" or "Personal Information."
+//       - Provide the response strictly in JSON format.
+//       Resume Text:
+//       """
+//       ${text}
+//       """
+//       Example JSON output:
+//       {
+//         "name": "John Doe",
+//         "email": "johndoe@gmail.com",
+//         "phone": "+1 123 456 7890"
+//       }
+//     `;
+//     const response = await openai.chat.completions.create({
+//       model: "gpt-4",
+//       messages: [{ role: "system", content: prompt }],
+//       temperature: 0.1,
+//     });
+//     const content = response.choices[0]?.message?.content?.trim();
+//     if (!content) {
+//       throw new Error("Empty response from OpenAI");
+//     }
+//     const parsedData = JSON.parse(content);
+//     return {
+//       name: parsedData.name || "",
+//       email: parsedData.email || "",
+//       phone: parsedData.phone || "",
+//     };
+//   } catch (error) {
+//     console.error("Error extracting candidate details:", error);
+//     return { name: "", email: "", phone: "" };
+//   }
+// };
