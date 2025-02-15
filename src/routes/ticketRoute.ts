@@ -5,12 +5,12 @@ import {
   getAllJob,
   getJob,
   updateJob,
-} from "../controllers/ticketController";
+} from "../controllers/jobController";
 import { authenticateUser } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.post("/create-ticket", authenticateUser, createJob);
+router.post("/create-job", authenticateUser, createJob);
 router.get("/get-all", authenticateUser, getAllJob);
 router.get("/getone-ticket/:id", authenticateUser, getJob);
 router.put("/update-ticket/:id", authenticateUser, updateJob);

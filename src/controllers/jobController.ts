@@ -5,10 +5,33 @@ import { successResponse, errorResponse } from "../utils/responseHandler";
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { jobTitle, jobDescription, screeningQuestions } = req.body;
+    const {
+      jobTitle,
+      jobDescription,
+      screeningQuestions,
+      locationType,
+      country,
+      countryCode,
+      state,
+    } = req.body;
 
     if (!req.user) {
-      res.status(401).json(errorResponse("Unauthorized"));
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const allowedLocationTypes = ["Remote", "On-site", "Hybrid"];
+    if (!allowedLocationTypes.includes(locationType)) {
+      res.status(400).json({
+        message: "Invalid locationType. Use 'Remote', 'On-site', or 'Hybrid'.",
+      });
+      return;
+    }
+
+    if (!country || !countryCode || !state) {
+      res
+        .status(400)
+        .json({ message: "Country, countryCode, and state are required." });
       return;
     }
 
@@ -17,13 +40,19 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       jobTitle,
       jobDescription,
       screeningQuestions,
+      locationType,
+      country,
+      countryCode,
+      state,
     });
 
     await job.save();
     res.status(201).json(successResponse("Job created successfully", job));
+    return;
   } catch (error) {
     console.error("Error creating job:", error);
     res.status(500).json(errorResponse("Internal Server Error"));
+    return;
   }
 };
 

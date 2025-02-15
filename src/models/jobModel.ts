@@ -5,6 +5,9 @@ export interface IJob extends Document {
   jobTitle: string;
   jobDescription: string;
   screeningQuestions: string[];
+  locationType: string;
+  countryCode: string;
+  state: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,6 +31,23 @@ const jobSchema = new Schema<IJob>(
     },
     screeningQuestions: {
       type: [String],
+      required: true,
+    },
+
+    locationType: {
+      type: String,
+      required: true,
+      enum: ["Remote", "On-site", "Hybrid"],
+    },
+
+    countryCode: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    state: {
+      type: String,
+      trim: true,
       required: true,
     },
   },

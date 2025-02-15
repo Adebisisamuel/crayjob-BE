@@ -55,6 +55,21 @@ const jobSchema = new mongoose_1.Schema({
         type: [String],
         required: true,
     },
+    locationType: {
+        type: String,
+        required: true,
+        enum: ["Remote", "On-site", "Hybrid"],
+    },
+    countryCode: {
+        type: String,
+        trim: true,
+        required: true,
+    },
+    state: {
+        type: String,
+        trim: true,
+        required: true,
+    },
 }, { timestamps: true });
 exports.Job = mongoose_1.default.model("Job", jobSchema);
 exports.default = exports.Job;
