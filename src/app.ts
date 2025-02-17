@@ -17,7 +17,16 @@ connectDb();
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "FrontendUrl"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(helmet());
 app.use(morgan("dev"));
 // app.use(express.json());
