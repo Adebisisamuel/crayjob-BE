@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import userRoute from "./routes/userRoute";
 import jobRoute from "./routes/jobRoute";
 import resumeRoute from "./routes/resumeRoutes";
+import aiRoute from "./routes/aiRoutes";
 
 import connectDb from "./config/db";
 
@@ -31,9 +32,10 @@ app.use((req, res, next) => {
 app.use("/users", userRoute);
 app.use("/job", jobRoute);
 app.use("/resume", resumeRoute);
+app.use("/ai", aiRoute);
 
 app.get("/", (req, res) => {
-  res.send("CrayJob API is running!");
+  res.send("CrayHunt API is running!");
 });
 
 export default app;
