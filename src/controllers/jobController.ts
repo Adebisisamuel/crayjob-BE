@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { Job } from "../models/jobModel";
 import { AuthRequest } from "../Types/authTypes";
 import { successResponse, errorResponse } from "../utils/responseHandler";
@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from "../utils/responseHandler";
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
     const {
+      companyName,
       jobTitle,
       jobDescription,
       screeningQuestions,
@@ -28,19 +29,20 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    if (!country || !countryCode || !state) {
-      res
-        .status(400)
-        .json({ message: "Country, countryCode, and state are required." });
-      return;
-    }
+    // if (!country || !countryCode || !state) {
+    //   res
+    //     .status(400)
+    //     .json({ message: "Country, countryCode, and state are required." });
+    //   return;
+    // }
 
     const job = new Job({
-      user: req.user.id,
+      userId: req.user.id,
+      companyName,
       jobTitle,
       jobDescription,
-      screeningQuestions,
       locationType,
+      screeningQuestions,
       country,
       countryCode,
       state,
@@ -62,10 +64,7 @@ export const getAllJob = async (req: AuthRequest, res: Response) => {
       res.status(401).json(errorResponse("Unauthorized"));
       return;
     }
-    const jobs = await Job.find({ user: req.user.id }).populate(
-      "user",
-      "firstName surname email"
-    );
+    const jobs = await Job.find({ user: req.user.id });
     res.json(successResponse("All jobs retrieved successfully", jobs));
   } catch (error) {
     console.log("Error retrieving jobs", error);

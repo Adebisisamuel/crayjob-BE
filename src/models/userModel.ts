@@ -1,5 +1,4 @@
-// import mongoose from "mongoose";
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Model } from "mongoose";
 
 export interface IUser {
   firstName: string;

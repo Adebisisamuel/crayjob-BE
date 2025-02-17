@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IJob extends Document {
-  user: mongoose.Schema.Types.ObjectId;
+  userId: mongoose.Schema.Types.ObjectId;
+  companyName: string;
   jobTitle: string;
+  location: string;
   jobDescription: string;
   screeningQuestions: string[];
   locationType: string;
@@ -14,15 +16,25 @@ export interface IJob extends Document {
 
 const jobSchema = new Schema<IJob>(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    companyName: {
+      type: String,
+      required: true,
+      trim: true,
     },
     jobTitle: {
       type: String,
       required: true,
       trim: true,
+    },
+    locationType: {
+      type: String,
+      required: true,
+      enum: ["Remote", "On-site", "Hybrid"],
     },
     jobDescription: {
       type: String,
@@ -33,22 +45,15 @@ const jobSchema = new Schema<IJob>(
       type: [String],
       required: true,
     },
-
-    locationType: {
-      type: String,
-      required: true,
-      enum: ["Remote", "On-site", "Hybrid"],
-    },
-
     countryCode: {
       type: String,
       trim: true,
-      required: true,
+      required: false,
     },
     state: {
       type: String,
       trim: true,
-      required: true,
+      required: false,
     },
   },
   { timestamps: true }

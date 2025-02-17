@@ -1,12 +1,15 @@
 import express from "express";
+
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import connectDb from "./config/db";
-import userRoute from "./routes/userRoute";
-import ticketRoute from "./routes/ticketRoute";
-import resumeRoute from "./routes/resumeRoutes";
 import dotenv from "dotenv";
+
+import userRoute from "./routes/userRoute";
+import jobRoute from "./routes/jobRoute";
+import resumeRoute from "./routes/resumeRoutes";
+
+import connectDb from "./config/db";
 
 dotenv.config();
 connectDb();
@@ -26,7 +29,7 @@ app.use((req, res, next) => {
 
 //Routes
 app.use("/users", userRoute);
-app.use("/ticket", ticketRoute);
+app.use("/job", jobRoute);
 app.use("/resume", resumeRoute);
 
 app.get("/", (req, res) => {

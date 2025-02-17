@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/userModel";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 import { sendActivationEmail } from "../utils/sendActivationEmail";
+import { AuthRequest } from "../Types/authTypes";
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -28,13 +29,11 @@ export const registerUser = async (req: Request, res: Response) => {
         await existingUser.save();
 
         await sendActivationEmail(existingUser.email, verificationCode);
-        res
-          .status(200)
-          .json({
-            success: true,
-            message: "OTP resent to email",
-            user: existingUser,
-          });
+        res.status(200).json({
+          success: true,
+          message: "OTP resent to email",
+          user: existingUser,
+        });
         return;
       } else {
         res.status(400).json(errorResponse("User already exists"));
@@ -170,6 +169,26 @@ export const loginUser = async (req: Request, res: Response) => {
     res.json(successResponse("Login successful", { token }));
   } catch (error) {
     console.error("Login error", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+  }
+};
+
+export const getUser = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+    const user = await User.findById(req.user.id).select("-password");
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    res.status(200).json(successResponse("Job created successfully", user));
+  } catch (error) {
+    console.error("Error fetching user:", error);
     res.status(500).json(errorResponse("Internal Server Error"));
   }
 };

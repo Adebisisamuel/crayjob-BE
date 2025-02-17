@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
-import multer from "multer";
 import AWS from "aws-sdk";
-import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
+import mongoose from "mongoose";
+import multer from "multer";
+import pdfParse from "pdf-parse";
+
+import { AuthRequest } from "../Types/authTypes";
 import ResumeModel from "../models/resumeModel";
 import JobModel from "../models/jobModel";
 import { extractCandidateDetails } from "../utils/resumeParser";
 import { errorResponse, successResponse } from "../utils/responseHandler";
-import { AuthRequest } from "../Types/authTypes";
-import mongoose from "mongoose";
 
 // Configure AWS S3
 const s3 = new AWS.S3({
@@ -30,21 +31,21 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
           .json({ message: "File upload failed", error: err });
 
       const { jobId } = req.body;
-      console.log("Received Ticket ID:", jobId);
+      console.log("Received Job ID:", jobId);
       console.log("Authenticated User ID:", req.user!.id);
       if (!jobId) {
-        res.status(400).json(errorResponse("TicketId is Required"));
+        res.status(400).json(errorResponse("JobId is Required"));
         return;
       }
-      const ticket = await JobModel.find({
+      const job = await JobModel.find({
         _id: jobId,
         userId: req.user!.id,
       });
-      if (!ticket) {
-        res.status(404).json(errorResponse("Ticket not found or Unauthorized"));
+      if (!job) {
+        res.status(404).json(errorResponse("Job not found or Unauthorized"));
         return;
       }
-      console.log("Ticket Found:", ticket);
+      console.log("Job Found:", job);
 
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0)
