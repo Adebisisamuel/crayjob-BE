@@ -13,15 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCandidateByJobs = exports.uploadResumes = void 0;
-const multer_1 = __importDefault(require("multer"));
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
-const pdf_parse_1 = __importDefault(require("pdf-parse"));
 const mammoth_1 = __importDefault(require("mammoth"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const multer_1 = __importDefault(require("multer"));
+const pdf_parse_1 = __importDefault(require("pdf-parse"));
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
 const jobModel_1 = __importDefault(require("../models/jobModel"));
 const resumeParser_1 = require("../utils/resumeParser");
 const responseHandler_1 = require("../utils/responseHandler");
-const mongoose_1 = __importDefault(require("mongoose"));
 // Configure AWS S3
 const s3 = new aws_sdk_1.default.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -40,21 +40,21 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     .status(500)
                     .json({ message: "File upload failed", error: err });
             const { jobId } = req.body;
-            console.log("Received Ticket ID:", jobId);
+            console.log("Received Job ID:", jobId);
             console.log("Authenticated User ID:", req.user.id);
             if (!jobId) {
-                res.status(400).json((0, responseHandler_1.errorResponse)("TicketId is Required"));
+                res.status(400).json((0, responseHandler_1.errorResponse)("JobId is Required"));
                 return;
             }
-            const ticket = yield jobModel_1.default.find({
+            const job = yield jobModel_1.default.find({
                 _id: jobId,
                 userId: req.user.id,
             });
-            if (!ticket) {
-                res.status(404).json((0, responseHandler_1.errorResponse)("Ticket not found or Unauthorized"));
+            if (!job) {
+                res.status(404).json((0, responseHandler_1.errorResponse)("Job not found or Unauthorized"));
                 return;
             }
-            console.log("Ticket Found:", ticket);
+            console.log("Job Found:", job);
             const files = req.files;
             if (!files || files.length === 0)
                 return res.status(400).json((0, responseHandler_1.errorResponse)("No files uploaded"));

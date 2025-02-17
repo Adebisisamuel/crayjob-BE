@@ -7,11 +7,12 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
-const db_1 = __importDefault(require("./config/db"));
-const userRoute_1 = __importDefault(require("./routes/userRoute"));
-const ticketRoute_1 = __importDefault(require("./routes/ticketRoute"));
-const resumeRoutes_1 = __importDefault(require("./routes/resumeRoutes"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const userRoute_1 = __importDefault(require("./routes/userRoute"));
+const jobRoute_1 = __importDefault(require("./routes/jobRoute"));
+const resumeRoutes_1 = __importDefault(require("./routes/resumeRoutes"));
+const aiRoutes_1 = __importDefault(require("./routes/aiRoutes"));
+const db_1 = __importDefault(require("./config/db"));
 dotenv_1.default.config();
 (0, db_1.default)();
 const app = (0, express_1.default)();
@@ -27,9 +28,10 @@ app.use((req, res, next) => {
 });
 //Routes
 app.use("/users", userRoute_1.default);
-app.use("/ticket", ticketRoute_1.default);
+app.use("/job", jobRoute_1.default);
 app.use("/resume", resumeRoutes_1.default);
+app.use("/ai", aiRoutes_1.default);
 app.get("/", (req, res) => {
-    res.send("CrayJob API is running!");
+    res.send("CrayHunt API is running!");
 });
 exports.default = app;

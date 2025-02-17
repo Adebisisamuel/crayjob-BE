@@ -10,6 +10,7 @@ export interface IJob extends Document {
   locationType: string;
   countryCode: string;
   state: string;
+  queue: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -54,6 +55,10 @@ const jobSchema = new Schema<IJob>(
       type: String,
       trim: true,
       required: false,
+    },
+    queue: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

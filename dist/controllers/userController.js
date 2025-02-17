@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginUser = exports.resendVerificationCode = exports.verifyEmail = exports.registerUser = void 0;
+exports.getUser = exports.loginUser = exports.resendVerificationCode = exports.verifyEmail = exports.registerUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userModel_1 = __importDefault(require("../models/userModel"));
@@ -33,9 +33,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 existingUser.verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
                 yield existingUser.save();
                 yield (0, sendActivationEmail_1.sendActivationEmail)(existingUser.email, verificationCode);
-                res
-                    .status(200)
-                    .json({
+                res.status(200).json({
                     success: true,
                     message: "OTP resent to email",
                     user: existingUser,
@@ -168,3 +166,22 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.loginUser = loginUser;
+const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const user = yield userModel_1.default.findById(req.user.id).select("-password");
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        res.status(200).json((0, responseHandler_1.successResponse)("Job created successfully", user));
+    }
+    catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.getUser = getUser;

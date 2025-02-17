@@ -14,7 +14,7 @@ const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
 const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { jobTitle, jobDescription, screeningQuestions, locationType, country, countryCode, state, } = req.body;
+        const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, country, countryCode, state, } = req.body;
         if (!req.user) {
             res.status(401).json({ message: "Unauthorized" });
             return;
@@ -26,18 +26,19 @@ const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             });
             return;
         }
-        if (!country || !countryCode || !state) {
-            res
-                .status(400)
-                .json({ message: "Country, countryCode, and state are required." });
-            return;
-        }
+        // if (!country || !countryCode || !state) {
+        //   res
+        //     .status(400)
+        //     .json({ message: "Country, countryCode, and state are required." });
+        //   return;
+        // }
         const job = new jobModel_1.Job({
-            user: req.user.id,
+            userId: req.user.id,
+            companyName,
             jobTitle,
             jobDescription,
-            screeningQuestions,
             locationType,
+            screeningQuestions,
             country,
             countryCode,
             state,
@@ -59,7 +60,7 @@ const getAllJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const jobs = yield jobModel_1.Job.find({ user: req.user.id }).populate("user", "firstName surname email");
+        const jobs = yield jobModel_1.Job.find({ user: req.user.id });
         res.json((0, responseHandler_1.successResponse)("All jobs retrieved successfully", jobs));
     }
     catch (error) {

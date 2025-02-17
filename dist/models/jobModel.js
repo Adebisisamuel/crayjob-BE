@@ -36,15 +36,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Job = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const jobSchema = new mongoose_1.Schema({
-    user: {
+    userId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+    },
+    companyName: {
+        type: String,
+        required: true,
+        trim: true,
     },
     jobTitle: {
         type: String,
         required: true,
         trim: true,
+    },
+    locationType: {
+        type: String,
+        required: true,
+        enum: ["Remote", "On-site", "Hybrid"],
     },
     jobDescription: {
         type: String,
@@ -55,20 +65,19 @@ const jobSchema = new mongoose_1.Schema({
         type: [String],
         required: true,
     },
-    locationType: {
-        type: String,
-        required: true,
-        enum: ["Remote", "On-site", "Hybrid"],
-    },
     countryCode: {
         type: String,
         trim: true,
-        required: true,
+        required: false,
     },
     state: {
         type: String,
         trim: true,
-        required: true,
+        required: false,
+    },
+    queue: {
+        type: Number,
+        default: 0,
     },
 }, { timestamps: true });
 exports.Job = mongoose_1.default.model("Job", jobSchema);
