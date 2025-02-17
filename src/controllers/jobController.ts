@@ -64,7 +64,7 @@ export const getAllJob = async (req: AuthRequest, res: Response) => {
       res.status(401).json(errorResponse("Unauthorized"));
       return;
     }
-    const jobs = await Job.find({ user: req.user.id });
+    const jobs = await Job.find({ userId: req.user.id });
     res.json(successResponse("All jobs retrieved successfully", jobs));
   } catch (error) {
     console.log("Error retrieving jobs", error);
