@@ -18,7 +18,11 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 // app.use(cors());
 app.use((0, cors_1.default)({
-    origin: ["http://localhost:3000", "FrontendUrl"],
+    origin: [
+        "http://localhost:3000",
+        "https://d182t84hs333hf.cloudfront.net",
+        "https://crayhunt.com",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
