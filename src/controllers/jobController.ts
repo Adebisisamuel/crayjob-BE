@@ -1,7 +1,8 @@
 import { Response } from "express";
-import { Job } from "../models/jobModel";
+import { IJob, Job } from "../models/jobModel";
 import { AuthRequest } from "../Types/authTypes";
 import { successResponse, errorResponse } from "../utils/responseHandler";
+import ResumeModel from "../models/resumeModel";
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
@@ -64,8 +65,69 @@ export const getAllJob = async (req: AuthRequest, res: Response) => {
       res.status(401).json(errorResponse("Unauthorized"));
       return;
     }
+
     const jobs = await Job.find({ userId: req.user.id });
-    res.json(successResponse("All jobs retrieved successfully", jobs));
+    const jobIds = jobs.map((job) => job._id);
+
+    if (jobIds.length === 0) {
+      res.json(successResponse("All jobs retrieved successfully", []));
+      return;
+    }
+
+    // Aggregate resumes to get counts grouped by jobId and status.
+    // Use $ifNull to default missing status fields to "queue".
+    const resumeStatusCounts = await ResumeModel.aggregate([
+      { $match: { jobId: { $in: jobIds } } },
+      {
+        $group: {
+          _id: {
+            jobId: "$jobId",
+            status: { $ifNull: ["$status", "queue"] },
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Build a mapping of jobId to its candidatesStatus counts.
+    const candidatesStatusMap: Record<string, Record<string, number>> = {};
+
+    resumeStatusCounts.forEach((item: any) => {
+      const jobIdStr = item._id.jobId.toString();
+      if (!candidatesStatusMap[jobIdStr]) {
+        candidatesStatusMap[jobIdStr] = {};
+      }
+      candidatesStatusMap[jobIdStr][item._id.status] = item.count;
+    });
+
+    // Default statuses with all counts set to 0
+    const defaultStatuses: Record<string, number> = {
+      queue: 0,
+      "in-progress": 0,
+      unreachable: 0,
+      shortlisted: 0,
+      rejected: 0,
+    };
+
+    // Extend the job object type to include candidatesStatus.
+    interface IJobWithCandidatesStatus extends IJob {
+      candidatesStatus?: Record<string, number>;
+    }
+
+    // Attach the candidatesStatus counts to each job, merging default statuses with any actual counts.
+    const jobsWithCounts = jobs.map((job) => {
+      const jobObj: IJobWithCandidatesStatus = job.toObject();
+      const jobIdStr = job.id; // using Mongoose's virtual getter 'id'
+      jobObj.candidatesStatus = {
+        ...defaultStatuses,
+        ...(candidatesStatusMap[jobIdStr] || {}),
+      };
+      return jobObj;
+    });
+
+    res.json(
+      successResponse("All jobs retrieved successfully", jobsWithCounts)
+    );
   } catch (error) {
     console.log("Error retrieving jobs", error);
     res.status(500).json(errorResponse("Internal Server Error"));

@@ -19,8 +19,7 @@ const s3 = new AWS.S3({
 });
 
 // Set up Multer storage
-const storage = multer.memoryStorage();
-const upload = multer({ storage }).array("resumes", 50);
+const upload = multer({ storage: multer.memoryStorage() }).array("files", 50);
 
 export const uploadResumes = async (req: AuthRequest, res: Response) => {
   try {
@@ -53,6 +52,7 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
 
       const recruiterId = req.user!.id;
       const uploadedResumes = [];
+      const duplicatesFound = [];
 
       for (const file of files) {
         try {
@@ -92,6 +92,16 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
             extractedText
           );
 
+          // Check for duplicate phone number for the same job.
+          if (phone) {
+            const duplicate = await ResumeModel.findOne({ jobId, phone });
+            if (duplicate) {
+              duplicatesFound.push({ fileName: file.originalname, phone });
+              // Skip this resume and continue processing other files.
+              continue;
+            }
+          }
+
           // Save resume details in MongoDB
           const newResume = new ResumeModel({
             userId: recruiterId,
@@ -114,9 +124,20 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
         }
       }
 
+      // Prepare the response. You could return both successes and duplicates.
+      const responseData = {
+        uploadedResumes,
+        duplicatesFound,
+      };
+
+      let message = "Resumes uploaded successfully.";
+      if (duplicatesFound.length > 0) {
+        message += ` ${duplicatesFound.length} duplicate resume(s) were skipped.`;
+      }
+
       res.status(201).json({
-        message: "Resumes uploaded successfully",
-        data: uploadedResumes,
+        message,
+        data: responseData,
       });
       return;
     });
@@ -127,37 +148,17 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// export const getResumesByTicket = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { ticketId } = req.params;
-
-//     if (!ticketId) {
-//       res.status(400).json(errorResponse("Ticket ID is required"));
-//       return;
-//     }
-//     const resumes = await Resume.find({ ticketId });
-//     res
-//       .status(200)
-//       .json(successResponse("Resumes retrieved successfully", resumes));
-//     return;
-//   } catch (error) {
-//     console.log("Error fetching Resume", error);
-//     res.status(500).json(errorResponse("Internal Server Error"));
-//   }
-// };
-
 export const getCandidateByJobs = async (req: Request, res: Response) => {
   try {
     const { jobId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
-      res.status(400).json({ message: "Invalid Ticket ID format" });
+      res.status(400).json({ message: "Invalid Job ID format" });
       return;
     }
 
-    const candidates = await ResumeModel.find({ jobId }).select(
-      "name email phone"
-    );
+    // Include 'status' along with name, email, and phone.
+    const candidates = await ResumeModel.find({ jobId });
 
     if (candidates.length === 0) {
       res.status(404).json({ message: "No candidates found for this ticket" });

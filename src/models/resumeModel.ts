@@ -9,6 +9,7 @@ export interface IResume extends Document {
   name?: string;
   email?: string;
   phone?: string;
+  status?: string;
 }
 
 const ResumeSchema = new Schema<IResume>(
@@ -45,6 +46,11 @@ const ResumeSchema = new Schema<IResume>(
     },
     phone: {
       type: String,
+    },
+    status: {
+      type: String,
+      enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],
+      default: "queue", // default status when resume is first uploaded
     },
   },
   { timestamps: true }

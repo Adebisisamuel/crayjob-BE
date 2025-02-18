@@ -56,10 +56,6 @@ const jobSchema = new Schema<IJob>(
       trim: true,
       required: false,
     },
-    queue: {
-      type: Number,
-      default: 0,
-    },
   },
   { timestamps: true }
 );
