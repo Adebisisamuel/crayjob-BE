@@ -29,8 +29,7 @@ const s3 = new aws_sdk_1.default.S3({
     region: process.env.AWS_REGION,
 });
 // Set up Multer storage
-const storage = multer_1.default.memoryStorage();
-const upload = (0, multer_1.default)({ storage }).array("resumes", 50);
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() }).array("files", 50);
 const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
@@ -60,6 +59,7 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 return res.status(400).json((0, responseHandler_1.errorResponse)("No files uploaded"));
             const recruiterId = req.user.id;
             const uploadedResumes = [];
+            const duplicatesFound = [];
             for (const file of files) {
                 try {
                     const fileBuffer = file.buffer;
@@ -89,6 +89,15 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     }
                     console.log("Extracted Resume Text:", extractedText);
                     const { name, email, phone } = yield (0, resumeParser_1.extractCandidateDetails)(extractedText);
+                    // Check for duplicate phone number for the same job.
+                    if (phone) {
+                        const duplicate = yield resumeModel_1.default.findOne({ jobId, phone });
+                        if (duplicate) {
+                            duplicatesFound.push({ fileName: file.originalname, phone });
+                            // Skip this resume and continue processing other files.
+                            continue;
+                        }
+                    }
                     // Save resume details in MongoDB
                     const newResume = new resumeModel_1.default({
                         userId: recruiterId,
@@ -107,9 +116,18 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     continue;
                 }
             }
+            // Prepare the response. You could return both successes and duplicates.
+            const responseData = {
+                uploadedResumes,
+                duplicatesFound,
+            };
+            let message = "Resumes uploaded successfully.";
+            if (duplicatesFound.length > 0) {
+                message += ` ${duplicatesFound.length} duplicate resume(s) were skipped.`;
+            }
             res.status(201).json({
-                message: "Resumes uploaded successfully",
-                data: uploadedResumes,
+                message,
+                data: responseData,
             });
             return;
         }));
@@ -121,31 +139,15 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.uploadResumes = uploadResumes;
-// export const getResumesByTicket = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { ticketId } = req.params;
-//     if (!ticketId) {
-//       res.status(400).json(errorResponse("Ticket ID is required"));
-//       return;
-//     }
-//     const resumes = await Resume.find({ ticketId });
-//     res
-//       .status(200)
-//       .json(successResponse("Resumes retrieved successfully", resumes));
-//     return;
-//   } catch (error) {
-//     console.log("Error fetching Resume", error);
-//     res.status(500).json(errorResponse("Internal Server Error"));
-//   }
-// };
 const getCandidateByJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { jobId } = req.params;
         if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
-            res.status(400).json({ message: "Invalid Ticket ID format" });
+            res.status(400).json({ message: "Invalid Job ID format" });
             return;
         }
-        const candidates = yield resumeModel_1.default.find({ jobId }).select("name email phone");
+        // Include 'status' along with name, email, and phone.
+        const candidates = yield resumeModel_1.default.find({ jobId });
         if (candidates.length === 0) {
             res.status(404).json({ message: "No candidates found for this ticket" });
             return;

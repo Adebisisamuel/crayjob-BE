@@ -8,10 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
 const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
+const resumeModel_1 = __importDefault(require("../models/resumeModel"));
 const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, country, countryCode, state, } = req.body;
@@ -61,7 +65,50 @@ const getAllJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         const jobs = yield jobModel_1.Job.find({ userId: req.user.id });
-        res.json((0, responseHandler_1.successResponse)("All jobs retrieved successfully", jobs));
+        const jobIds = jobs.map((job) => job._id);
+        if (jobIds.length === 0) {
+            res.json((0, responseHandler_1.successResponse)("All jobs retrieved successfully", []));
+            return;
+        }
+        // Aggregate resumes to get counts grouped by jobId and status.
+        // Use $ifNull to default missing status fields to "queue".
+        const resumeStatusCounts = yield resumeModel_1.default.aggregate([
+            { $match: { jobId: { $in: jobIds } } },
+            {
+                $group: {
+                    _id: {
+                        jobId: "$jobId",
+                        status: { $ifNull: ["$status", "queue"] },
+                    },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+        // Build a mapping of jobId to its candidatesStatus counts.
+        const candidatesStatusMap = {};
+        resumeStatusCounts.forEach((item) => {
+            const jobIdStr = item._id.jobId.toString();
+            if (!candidatesStatusMap[jobIdStr]) {
+                candidatesStatusMap[jobIdStr] = {};
+            }
+            candidatesStatusMap[jobIdStr][item._id.status] = item.count;
+        });
+        // Default statuses with all counts set to 0
+        const defaultStatuses = {
+            queue: 0,
+            "in-progress": 0,
+            unreachable: 0,
+            shortlisted: 0,
+            rejected: 0,
+        };
+        // Attach the candidatesStatus counts to each job, merging default statuses with any actual counts.
+        const jobsWithCounts = jobs.map((job) => {
+            const jobObj = job.toObject();
+            const jobIdStr = job.id; // using Mongoose's virtual getter 'id'
+            jobObj.candidatesStatus = Object.assign(Object.assign({}, defaultStatuses), (candidatesStatusMap[jobIdStr] || {}));
+            return jobObj;
+        });
+        res.json((0, responseHandler_1.successResponse)("All jobs retrieved successfully", jobsWithCounts));
     }
     catch (error) {
         console.log("Error retrieving jobs", error);

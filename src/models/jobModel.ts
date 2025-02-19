@@ -11,6 +11,11 @@ export interface IJob extends Document {
   countryCode: string;
   state: string;
   queue: number;
+  inProgress: number;
+  unreachable: number;
+  shortlisted: number;
+  rejected: number;
+  jobStatus: "active" | "closed";
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -55,6 +60,31 @@ const jobSchema = new Schema<IJob>(
       type: String,
       trim: true,
       required: false,
+    },
+    queue: {
+      type: Number,
+      default: 0,
+    },
+    inProgress: {
+      type: Number,
+      default: 0,
+    },
+    unreachable: {
+      type: Number,
+      default: 0,
+    },
+    shortlisted: {
+      type: Number,
+      default: 0,
+    },
+    rejected: {
+      type: Number,
+      default: 0,
+    },
+    jobStatus: {
+      type: String,
+      enum: ["active", "closed"],
+      default: "active",
     },
   },
   { timestamps: true }

@@ -79,6 +79,27 @@ const jobSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
+    inProgress: {
+        type: Number,
+        default: 0,
+    },
+    unreachable: {
+        type: Number,
+        default: 0,
+    },
+    shortlisted: {
+        type: Number,
+        default: 0,
+    },
+    rejected: {
+        type: Number,
+        default: 0,
+    },
+    jobStatus: {
+        type: String,
+        enum: ["active", "closed"],
+        default: "active",
+    },
 }, { timestamps: true });
 exports.Job = mongoose_1.default.model("Job", jobSchema);
 exports.default = exports.Job;

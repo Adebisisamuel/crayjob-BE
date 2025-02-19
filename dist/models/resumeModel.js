@@ -66,5 +66,10 @@ const ResumeSchema = new mongoose_1.Schema({
     phone: {
         type: String,
     },
+    status: {
+        type: String,
+        enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],
+        default: "queue", // default status when resume is first uploaded
+    },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("Resume", ResumeSchema);
