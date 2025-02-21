@@ -75,26 +75,6 @@ const jobSchema = new mongoose_1.Schema({
         trim: true,
         required: false,
     },
-    queue: {
-        type: Number,
-        default: 0,
-    },
-    inProgress: {
-        type: Number,
-        default: 0,
-    },
-    unreachable: {
-        type: Number,
-        default: 0,
-    },
-    shortlisted: {
-        type: Number,
-        default: 0,
-    },
-    rejected: {
-        type: Number,
-        default: 0,
-    },
     jobStatus: {
         type: String,
         enum: ["active", "closed"],

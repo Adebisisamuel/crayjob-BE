@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
+exports.getTotalCandidate = exports.getClosedJob = exports.getActiveJob = exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
 const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
@@ -182,3 +182,79 @@ const deleteJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.deleteJob = deleteJob;
+const getActiveJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const activeJobs = yield jobModel_1.Job.find({
+            userId: req.user.id,
+            jobStatus: "active",
+        });
+        const totalActiveJobs = activeJobs.length;
+        res.status(200).json((0, responseHandler_1.successResponse)("Active Jobs retrieved successfully", {
+            totalActiveJobs,
+            jobs: activeJobs,
+        }));
+        return;
+    }
+    catch (error) {
+        console.error("Error getting active Jobs", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+        return;
+    }
+});
+exports.getActiveJob = getActiveJob;
+const getClosedJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const closedJobs = yield jobModel_1.Job.find({
+            userId: req.user.id,
+            jobStatus: "closed",
+        });
+        const totalClosedJobs = closedJobs.length;
+        res.status(200).json((0, responseHandler_1.successResponse)("Closed Jobs retrieved successfully", {
+            totalClosedJobs,
+            jobs: closedJobs,
+        }));
+        return;
+    }
+    catch (error) {
+        console.error("Error getting closed Jobs", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+        return;
+    }
+});
+exports.getClosedJob = getClosedJob;
+const getTotalCandidate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const jobs = yield jobModel_1.Job.find({ userId: req.user.id });
+        const jobIds = jobs.map((job) => job._id);
+        if (jobIds.length === 0) {
+            res
+                .status(401)
+                .json((0, responseHandler_1.successResponse)("No candidate found", { totalCandidate: 0 }));
+            return;
+        }
+        const totalCandidate = yield resumeModel_1.default.countDocuments({
+            jobId: { $in: jobIds },
+        });
+        res.json((0, responseHandler_1.successResponse)("Total candidates retrieved successfully", {
+            totalCandidate,
+        }));
+        return;
+    }
+    catch (error) {
+        console.log("Error fetching total candidates", error);
+        res.status(500).json("Internal Server Error");
+    }
+});
+exports.getTotalCandidate = getTotalCandidate;

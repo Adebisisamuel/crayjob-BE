@@ -3,6 +3,7 @@ import { IJob, Job } from "../models/jobModel";
 import { AuthRequest } from "../Types/authTypes";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 import ResumeModel from "../models/resumeModel";
+import { Jobs } from "openai/resources/fine-tuning/jobs/jobs";
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
@@ -198,5 +199,89 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
     console.log("Error deleteing Job", error);
     res.status(500).json(errorResponse("Internal Server Error"));
     return;
+  }
+};
+
+export const getActiveJob = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+
+    const activeJobs = await Job.find({
+      userId: req.user.id,
+      jobStatus: "active",
+    });
+    const totalActiveJobs = activeJobs.length;
+
+    res.status(200).json(
+      successResponse("Active Jobs retrieved successfully", {
+        totalActiveJobs,
+        jobs: activeJobs,
+      })
+    );
+    return;
+  } catch (error) {
+    console.error("Error getting active Jobs", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+    return;
+  }
+};
+
+export const getClosedJob = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+
+    const closedJobs = await Job.find({
+      userId: req.user.id,
+      jobStatus: "closed",
+    });
+    const totalClosedJobs = closedJobs.length;
+
+    res.status(200).json(
+      successResponse("Closed Jobs retrieved successfully", {
+        totalClosedJobs,
+        jobs: closedJobs,
+      })
+    );
+    return;
+  } catch (error) {
+    console.error("Error getting closed Jobs", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+    return;
+  }
+};
+
+export const getTotalCandidate = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(404).json(errorResponse("Unauthorized"));
+      return;
+    }
+    const jobs = await Job.find({ userId: req.user.id });
+    const jobIds = jobs.map((job) => job._id);
+
+    if (jobIds.length === 0) {
+      res
+        .status(401)
+        .json(successResponse("No candidate found", { totalCandidate: 0 }));
+      return;
+    }
+    const totalCandidate = await ResumeModel.countDocuments({
+      jobId: { $in: jobIds },
+    });
+    res.json(
+      successResponse("Total candidates retrieved successfully", {
+        totalCandidate,
+      })
+    );
+    return;
+  } catch (error) {
+    console.log("Error fetching total candidates", error);
+    res.status(500).json("Internal Server Error");
   }
 };
