@@ -189,12 +189,14 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
     }
     const job = await Job.findOneAndDelete({
       _id: req.params.id,
-      user: req.user.id,
+      userId: req.user.id,
     });
     if (!job) {
       res.status(404).json(errorResponse("Job not found or unauthorized"));
+      return;
     }
     res.status(200).json(successResponse("Job Deleted Successfully"));
+    return;
   } catch (error) {
     console.log("Error deleteing Job", error);
     res.status(500).json(errorResponse("Internal Server Error"));

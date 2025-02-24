@@ -168,12 +168,14 @@ const deleteJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const job = yield jobModel_1.Job.findOneAndDelete({
             _id: req.params.id,
-            user: req.user.id,
+            userId: req.user.id,
         });
         if (!job) {
             res.status(404).json((0, responseHandler_1.errorResponse)("Job not found or unauthorized"));
+            return;
         }
         res.status(200).json((0, responseHandler_1.successResponse)("Job Deleted Successfully"));
+        return;
     }
     catch (error) {
         console.log("Error deleteing Job", error);

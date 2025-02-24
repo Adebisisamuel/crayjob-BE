@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteCandidate,
   getCandidateByJobs,
   updateCandidateDetails,
   //   // getResumesByTicket,
@@ -16,6 +17,11 @@ router.put(
   "/update-candidate/:candidateId",
   authenticateUser,
   updateCandidateDetails
+);
+router.delete(
+  "/delete-candidate/:candidateId",
+  authenticateUser,
+  deleteCandidate
 );
 
 export default router;
