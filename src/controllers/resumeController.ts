@@ -173,3 +173,42 @@ export const getCandidateByJobs = async (req: Request, res: Response) => {
     return;
   }
 };
+
+export const updateCandidateDetails = async (req: Request, res: Response) => {
+  try {
+    const { candidateId } = req.params; // Get the candidate's ID from the URL
+    const { name, email, phone } = req.body; // Get updated details from the body
+
+    // Validate incoming data (you can add more validation if needed)
+    if (!name || !email || !phone) {
+      res.status(400).json({ message: "Missing required fields" });
+      return;
+    }
+
+    // Find the candidate by ID
+    const candidate = await ResumeModel.findById(candidateId);
+
+    if (!candidate) {
+      res.status(404).json({ message: "Candidate not found" });
+      return;
+    }
+
+    // Update candidate details
+    candidate.name = name || candidate.name;
+    candidate.email = email || candidate.email;
+    candidate.phone = phone || candidate.phone;
+
+    // Save the updated candidate details
+    await candidate.save();
+
+    // Return the updated candidate
+    res
+      .status(200)
+      .json({ message: "Candidate details updated successfully", candidate });
+    return;
+  } catch (error) {
+    console.error("Error updating candidate details:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+};

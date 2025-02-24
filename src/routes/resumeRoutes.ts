@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getCandidateByJobs,
+  updateCandidateDetails,
   //   // getResumesByTicket,
   uploadResumes,
 } from "../controllers/resumeController";
@@ -11,5 +12,10 @@ const router = express.Router();
 router.post("/upload", authenticateUser, uploadResumes);
 // router.get("/get-resumes/:ticketId", authenticateUser, getResumesByTicket);
 router.get("/get-candidates/:jobId", authenticateUser, getCandidateByJobs);
+router.put(
+  "/update-candidate/:candidateId",
+  authenticateUser,
+  updateCandidateDetails
+);
 
 export default router;
