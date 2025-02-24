@@ -70,6 +70,11 @@ const jobSchema = new mongoose_1.Schema({
         trim: true,
         required: false,
     },
+    country: {
+        type: String,
+        trim: true,
+        required: false,
+    },
     state: {
         type: String,
         trim: true,

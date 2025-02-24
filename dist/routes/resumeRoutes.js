@@ -10,5 +10,6 @@ const router = express_1.default.Router();
 router.post("/upload", authMiddleware_1.authenticateUser, resumeController_1.uploadResumes);
 // router.get("/get-resumes/:ticketId", authenticateUser, getResumesByTicket);
 router.get("/get-candidates/:jobId", authMiddleware_1.authenticateUser, resumeController_1.getCandidateByJobs);
+router.put("/update-candidate/:candidateId", authMiddleware_1.authenticateUser, resumeController_1.updateCandidateDetails);
 router.delete("/delete-candidate/:candidateId", authMiddleware_1.authenticateUser, resumeController_1.deleteCandidate);
 exports.default = router;

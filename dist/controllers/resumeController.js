@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCandidate = exports.getCandidateByJobs = exports.uploadResumes = void 0;
+exports.deleteCandidate = exports.updateCandidateDetails = exports.getCandidateByJobs = exports.uploadResumes = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const mammoth_1 = __importDefault(require("mammoth"));
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -162,6 +162,40 @@ const getCandidateByJobs = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getCandidateByJobs = getCandidateByJobs;
+const updateCandidateDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { candidateId } = req.params; // Get the candidate's ID from the URL
+        const { name, email, phone } = req.body; // Get updated details from the body
+        // Validate incoming data (you can add more validation if needed)
+        if (!name || !email || !phone) {
+            res.status(400).json({ message: "Missing required fields" });
+            return;
+        }
+        // Find the candidate by ID
+        const candidate = yield resumeModel_1.default.findById(candidateId);
+        if (!candidate) {
+            res.status(404).json({ message: "Candidate not found" });
+            return;
+        }
+        // Update candidate details
+        candidate.name = name || candidate.name;
+        candidate.email = email || candidate.email;
+        candidate.phone = phone || candidate.phone;
+        // Save the updated candidate details
+        yield candidate.save();
+        // Return the updated candidate
+        res
+            .status(200)
+            .json({ message: "Candidate details updated successfully", candidate });
+        return;
+    }
+    catch (error) {
+        console.error("Error updating candidate details:", error);
+        res.status(500).json({ message: "Internal server error" });
+        return;
+    }
+});
+exports.updateCandidateDetails = updateCandidateDetails;
 const deleteCandidate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { candidateId } = req.params;
