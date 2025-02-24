@@ -8,6 +8,7 @@ export interface IJob extends Document {
   jobDescription: string;
   screeningQuestions: string[];
   locationType: string;
+  country: string;
   countryCode: string;
   state: string;
   queue: number;
@@ -52,6 +53,11 @@ const jobSchema = new Schema<IJob>(
       required: true,
     },
     countryCode: {
+      type: String,
+      trim: true,
+      required: false,
+    },
+    country: {
       type: String,
       trim: true,
       required: false,
