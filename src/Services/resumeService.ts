@@ -1,3 +1,68 @@
+import fs from "fs";
+import path from "path";
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
+import Tesseract from "tesseract.js";
+
+export const extractTextFromFile = async (
+  filePath: string
+): Promise<string> => {
+  const ext = path.extname(filePath).toLowerCase();
+
+  try {
+    if (ext === ".pdf") {
+      return await extractTextFromPDF(filePath);
+    } else if (ext === ".docx") {
+      return await extractTextFromDOCX(filePath);
+    } else {
+      throw new Error(
+        "Unsupported file format. Only PDF and DOCX are allowed."
+      );
+    }
+  } catch (error) {
+    console.error("Error extracting text:", error);
+    return "";
+  }
+};
+
+const extractTextFromPDF = async (filePath: string): Promise<string> => {
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const pdfData = await pdfParse(dataBuffer);
+
+    if (pdfData.text.trim()) {
+      return pdfData.text;
+    } else {
+      console.log("PDF seems to be an image. Falling back to OCR...");
+      return await extractTextWithOCR(filePath);
+    }
+  } catch (error) {
+    console.error("Error extracting text from PDF:", error);
+    return "";
+  }
+};
+
+const extractTextFromDOCX = async (filePath: string): Promise<string> => {
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const { value } = await mammoth.extractRawText({ buffer: dataBuffer });
+    return value;
+  } catch (error) {
+    console.error("Error extracting text from DOCX:", error);
+    return "";
+  }
+};
+
+const extractTextWithOCR = async (filePath: string): Promise<string> => {
+  try {
+    const { data } = await Tesseract.recognize(filePath, "eng");
+    return data.text;
+  } catch (error) {
+    console.error("Error with OCR:", error);
+    return "";
+  }
+};
+
 // import { parseFile } from "../utils/resumeParser";
 // import openai from "../config/openaiConfig";
 

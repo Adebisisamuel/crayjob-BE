@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCandidateByJobs = exports.uploadResumes = void 0;
+exports.deleteCandidate = exports.getCandidateByJobs = exports.uploadResumes = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const mammoth_1 = __importDefault(require("mammoth"));
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -162,3 +162,32 @@ const getCandidateByJobs = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getCandidateByJobs = getCandidateByJobs;
+const deleteCandidate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { candidateId } = req.params;
+        if (!req.user) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        if (!mongoose_1.default.Types.ObjectId.isValid(candidateId)) {
+            res.status(400).json((0, responseHandler_1.errorResponse)("Invalid Id format"));
+            return;
+        }
+        const deleteResume = yield resumeModel_1.default.findOneAndDelete({
+            _id: candidateId,
+            userId: req.user.id,
+        });
+        if (!deleteResume) {
+            res
+                .status(401)
+                .json((0, responseHandler_1.errorResponse)("Candidate not found or unauthorized"));
+            return;
+        }
+        res.status(200).json((0, responseHandler_1.successResponse)("Candidate Deleted Successfully"));
+    }
+    catch (error) {
+        console.log("Error Deleting Resume", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.deleteCandidate = deleteCandidate;

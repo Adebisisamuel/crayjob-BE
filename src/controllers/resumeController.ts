@@ -173,3 +173,32 @@ export const getCandidateByJobs = async (req: Request, res: Response) => {
     return;
   }
 };
+
+export const deleteCandidate = async (req: AuthRequest, res: Response) => {
+  try {
+    const { candidateId } = req.params;
+
+    if (!req.user) {
+      res.status(404).json(errorResponse("Unauthorized"));
+      return;
+    }
+    if (!mongoose.Types.ObjectId.isValid(candidateId)) {
+      res.status(400).json(errorResponse("Invalid Id format"));
+      return;
+    }
+    const deleteResume = await ResumeModel.findOneAndDelete({
+      _id: candidateId,
+      userId: req.user.id,
+    });
+    if (!deleteResume) {
+      res
+        .status(401)
+        .json(errorResponse("Candidate not found or unauthorized"));
+      return;
+    }
+    res.status(200).json(successResponse("Candidate Deleted Successfully"));
+  } catch (error) {
+    console.log("Error Deleting Resume", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+  }
+};
