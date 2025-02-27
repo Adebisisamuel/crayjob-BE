@@ -9,6 +9,7 @@ import userRoute from "./routes/userRoute";
 import jobRoute from "./routes/jobRoute";
 import resumeRoute from "./routes/resumeRoutes";
 import aiRoute from "./routes/aiRoutes";
+import feedbackRoute from "./routes/feedbackRoutes";
 
 import connectDb from "./config/db";
 
@@ -46,6 +47,7 @@ app.use("/users", userRoute);
 app.use("/job", jobRoute);
 app.use("/resume", resumeRoute);
 app.use("/ai", aiRoute);
+app.use("/feedback", feedbackRoute);
 
 app.get("/", (req, res) => {
   res.send("CrayHunt API is running!");

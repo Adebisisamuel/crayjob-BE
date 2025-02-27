@@ -3,7 +3,6 @@ import { IJob, Job } from "../models/jobModel";
 import { AuthRequest } from "../Types/authTypes";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 import ResumeModel from "../models/resumeModel";
-import { Jobs } from "openai/resources/fine-tuning/jobs/jobs";
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
@@ -143,7 +142,7 @@ export const getJob = async (req: AuthRequest, res: Response) => {
     }
     const job = await Job.findOne({
       _id: req.params.id,
-      user: req.user.id,
+      userId: req.user.id,
     });
     if (!job) {
       res.status(400).json(errorResponse("Job not found or Unauthorized"));
