@@ -9,6 +9,8 @@ export interface IResume extends Document {
   name?: string;
   email?: string;
   phone?: string;
+  skills?: string[];
+  work_experience?: { title: string; comapany: string; duration: string }[];
   status?: string;
 }
 
@@ -47,6 +49,16 @@ const ResumeSchema = new Schema<IResume>(
     phone: {
       type: String,
     },
+    skills: {
+      type: [String],
+    },
+    work_experience: [
+      {
+        title: { type: String, required: false, default: "" },
+        company: { type: String, required: false, default: "" },
+        duration: { type: String, required: false, default: "" },
+      },
+    ],
     status: {
       type: String,
       enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],
