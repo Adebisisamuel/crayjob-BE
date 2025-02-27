@@ -66,6 +66,16 @@ const ResumeSchema = new mongoose_1.Schema({
     phone: {
         type: String,
     },
+    skills: {
+        type: [String],
+    },
+    work_experience: [
+        {
+            title: { type: String, required: false, default: "" },
+            company: { type: String, required: false, default: "" },
+            duration: { type: String, required: false, default: "" },
+        },
+    ],
     status: {
         type: String,
         enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],

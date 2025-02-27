@@ -55,12 +55,20 @@ const openai = new openai_1.default({
 const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     try {
+        console.log("Extracted Resume Text:", text); // Log the extracted text
+        if (!text || text.trim().length === 0) {
+            throw new Error("No text extracted from resume");
+        }
         const prompt = `
-      Extract the full name, email, and phone number of the candidate from the following resume text.
+      Extract the following details from the resume text:
 
-      - Ensure the name is the actual candidate's name, NOT an address, skill, or company name.
-      - If multiple names exist, choose the one that appears under "Name" or "Personal Information."
-      - Provide the response strictly in JSON format.
+      - Full name
+      - Email
+      - Phone number
+      - Skills (At least 3 relevant skills)
+      - Work Experience (Include 'title', 'company', and 'duration' for each job)
+
+      Provide the response strictly in **valid JSON format**.
 
       Resume Text:
       """
@@ -71,28 +79,57 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
       {
         "name": "John Doe",
         "email": "johndoe@gmail.com",
-        "phone": "+1 123 456 7890"
+        "phone": "+1 123 456 7890",
+        "skills": ["JavaScript", "React", "Node.js"],
+        "work_experience": [
+          {
+            "title": "Software Engineer",
+            "company": "Tech Corp",
+            "duration": "Jan 2020 - Dec 2023"
+          },
+          {
+            "title": "Frontend Developer",
+            "company": "Web Solutions",
+            "duration": "Feb 2018 - Dec 2019"
+          }
+        ]
       }
     `;
+        console.log("Sending prompt to OpenAI...");
         const response = yield openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ role: "system", content: prompt }],
             temperature: 0.1,
         });
         const content = (_c = (_b = (_a = response.choices[0]) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.trim();
+        console.log("Raw OpenAI Response:", content); // Log OpenAI's raw response
         if (!content) {
             throw new Error("Empty response from OpenAI");
         }
-        const parsedData = JSON.parse(content);
+        // Extract JSON part from OpenAI response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error("Invalid JSON response from OpenAI");
+        }
+        const parsedData = JSON.parse(jsonMatch[0]);
+        console.log("Parsed Data:", parsedData); // Log the parsed data
         return {
             name: parsedData.name || "",
             email: parsedData.email || "",
             phone: parsedData.phone || "",
+            skills: parsedData.skills || [],
+            work_experience: parsedData.work_experience || [],
         };
     }
     catch (error) {
         console.error("Error extracting candidate details:", error);
-        return { name: "", email: "", phone: "" };
+        return {
+            name: "",
+            email: "",
+            phone: "",
+            skills: [],
+            work_experience: [],
+        };
     }
 });
 exports.extractCandidateDetails = extractCandidateDetails;
