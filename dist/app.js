@@ -37,6 +37,9 @@ app.use((req, res, next) => {
     }
     express_1.default.json()(req, res, next);
 });
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", message: "Server is running" });
+});
 //Routes
 app.use("/users", userRoute_1.default);
 app.use("/job", jobRoute_1.default);

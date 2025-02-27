@@ -41,6 +41,9 @@ app.use((req, res, next) => {
   }
   express.json()(req, res, next);
 });
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is running" });
+});
 
 //Routes
 app.use("/users", userRoute);
