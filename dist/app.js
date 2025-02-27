@@ -12,6 +12,7 @@ const userRoute_1 = __importDefault(require("./routes/userRoute"));
 const jobRoute_1 = __importDefault(require("./routes/jobRoute"));
 const resumeRoutes_1 = __importDefault(require("./routes/resumeRoutes"));
 const aiRoutes_1 = __importDefault(require("./routes/aiRoutes"));
+const feedbackRoutes_1 = __importDefault(require("./routes/feedbackRoutes"));
 const db_1 = __importDefault(require("./config/db"));
 dotenv_1.default.config();
 (0, db_1.default)();
@@ -41,6 +42,7 @@ app.use("/users", userRoute_1.default);
 app.use("/job", jobRoute_1.default);
 app.use("/resume", resumeRoutes_1.default);
 app.use("/ai", aiRoutes_1.default);
+app.use("/feedback", feedbackRoutes_1.default);
 app.get("/", (req, res) => {
     res.send("CrayHunt API is running!");
 });

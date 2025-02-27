@@ -124,7 +124,7 @@ const getJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const job = yield jobModel_1.Job.findOne({
             _id: req.params.id,
-            user: req.user.id,
+            userId: req.user.id,
         });
         if (!job) {
             res.status(400).json((0, responseHandler_1.errorResponse)("Job not found or Unauthorized"));

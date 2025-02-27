@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractCandidateDetails = void 0;
+exports.extractCallDetails = exports.extractCandidateDetails = void 0;
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 // export const extractCandidateDetails = async (text: string) => {
 //   try {
@@ -133,3 +133,55 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.extractCandidateDetails = extractCandidateDetails;
+const extractCallDetails = (transcript) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    try {
+        const prompt = `
+You are an expert HR assistant. Given the transcript of a candidate call below, extract and output a JSON object with the following keys exactly:
+
+{
+  "screeningQA": {
+    "assistant": "user's response",
+    "Question 2": "Candidate's response"
+    // include all questions answered during the call
+  },
+  "summary": "A short overall summary of the candidate's responses",
+  "strengths": "Key strengths identified from the conversation",
+  "areasOfImprovement": "Areas where the candidate could improve",
+  "recommendations": "Hiring recommendation based on the conversation"
+}
+
+Use only the information provided in the transcript. If any field cannot be extracted, set its value to null.
+Here is the transcript:
+"""
+${transcript}
+"""
+Ensure your output is strictly valid JSON and nothing else.
+    `;
+        const response = yield openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "system", content: prompt }],
+            temperature: 0.1,
+        });
+        const content = (_c = (_b = (_a = response.choices[0]) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.trim();
+        if (!content) {
+            throw new Error("Empty response from OpenAI");
+        }
+        const parsedData = JSON.parse(content);
+        return parsedData;
+    }
+    catch (error) {
+        console.error("Error extracting call details:", error);
+        return {
+            candidateName: null,
+            callTime: null,
+            callStatus: null,
+            screeningQA: null,
+            summary: null,
+            strengths: null,
+            areasOfImprovement: null,
+            recommendations: null,
+        };
+    }
+});
+exports.extractCallDetails = extractCallDetails;
