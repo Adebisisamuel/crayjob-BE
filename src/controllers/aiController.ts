@@ -212,7 +212,8 @@ export const callCandidates = async (
     await JobModel.findByIdAndUpdate(jobId, { jobStatus: "active" });
 
     // Retrieve candidates associated with the job that are in 'queue'
-    const candidates = await ResumeModel.find({ jobId, status: "queue" });
+    // const candidates = await ResumeModel.find({ jobId, status: "queue" });
+    const candidates = await ResumeModel.find({ jobId });
     if (candidates.length === 0) {
       res.status(404).json({ message: "No candidates found for this job" });
       return;
