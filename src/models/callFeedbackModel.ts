@@ -13,7 +13,10 @@ export interface ICallFeedback extends Document {
   summary: string;
   strengths: string;
   areasOfImprovement: string;
-  recommendations: string;
+  recommendations: {
+    detailedWriteup: string;
+    finalDecision: string;
+  };
   createdAt: Date;
 }
 
@@ -34,7 +37,10 @@ const CallFeedbackSchema = new Schema<ICallFeedback>({
   summary: { type: String },
   strengths: { type: String },
   areasOfImprovement: { type: String },
-  recommendations: { type: String },
+  recommendations: {
+    detailedWriteup: { type: String },
+    finalDecision: { type: String },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

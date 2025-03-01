@@ -152,7 +152,10 @@ You are an expert HR assistant. Given the transcript of a candidate call below, 
   "summary": "A short overall summary of the candidate's responses",
   "strengths": "Key strengths identified from the conversation",
   "areasOfImprovement": "Areas where the candidate could improve",
-  "recommendations": "Hiring recommendation based on the conversation"
+  "recommendations": {
+    "detailedWriteup": "A detailed recommendation write-up based on the conversation",
+    "finalDecision": "Either 'hire' or 'reject' based on the conversation"
+  }
 }
 
 Use only the information provided in the transcript. If any field cannot be extracted, set its value to null.
