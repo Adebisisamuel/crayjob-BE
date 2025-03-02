@@ -201,7 +201,7 @@ export const callCandidates = async (
     // Retrieve candidates associated with the job that are NOT "shortlisted" or "in-progress"
     const candidates = await ResumeModel.find({
       jobId,
-      status: { $nin: ["shortlisted", "in-progress"] },
+      status: { $nin: ["shortlisted"] },
     });
     if (candidates.length === 0) {
       res.status(404).json({ message: "No candidates found for this job" });
@@ -223,6 +223,7 @@ export const callCandidates = async (
       skills: string[];
       work_experience: any;
     }) => {
+      console.log(candidate?.phone, "here");
       try {
         const payload = {
           agent_id: process.env.BONLA_AGENT_ID,
@@ -327,7 +328,18 @@ export const bolnaCallback: any = async (
     }
 
     if (payload.transcript) {
-      const extractedData = await extractCallDetails(payload.transcript);
+      const job = await JobModel.findById(jobId);
+      const jobDescription = job?.jobDescription || "";
+      const candidateSkills =
+        payload.context_details?.recipient_data?.skills || [];
+      const workExperience =
+        payload.context_details?.recipient_data?.work_experience || [];
+      const extractedData = await extractCallDetails(
+        payload.transcript,
+        jobDescription,
+        candidateSkills,
+        workExperience
+      );
 
       // Business logic for final status:
       // Business logic for final status when the call is completed:

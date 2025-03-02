@@ -138,32 +138,49 @@ export const extractCandidateDetails = async (text: string) => {
   }
 };
 
-export const extractCallDetails = async (transcript: any) => {
+export const extractCallDetails = async (
+  transcript: any,
+  jobDescription: string,
+  candidateSkills: string[],
+  workExperience: any
+) => {
   try {
     const prompt = `
-You are an expert HR assistant. Given the transcript of a candidate call below, extract and output a JSON object with the following keys exactly:
+      You are an expert HR assistant. Given the transcript of a candidate call below, extract and output a JSON object with the following keys exactly:
 
-{
-  "screeningQA": {
-    "assistant": "user's response",
-    "Question 2": "Candidate's response"
-    // include all questions answered during the call
-  },
-  "summary": "A short overall summary of the candidate's responses",
-  "strengths": "Key strengths identified from the conversation",
-  "areasOfImprovement": "Areas where the candidate could improve",
-  "recommendations": {
-    "detailedWriteup": "A detailed recommendation write-up based on the conversation",
-    "finalDecision": "Either 'hire' or 'reject' based on the conversation"
-  }
-}
+      {
+        "screeningQA": {
+          "assistant": "user's response",
+          "Question 2": "Candidate's response"
+          // include all questions answered during the call
+        },
+        "summary": "A short overall summary of the candidate's responses",
+        "strengths": "Key strengths identified from the conversation",
+        "areasOfImprovement": "Areas where the candidate could improve",
+        "recommendations": {
+          "detailedWriteup": "A detailed recommendation write-up based on the conversation",
+          "finalDecision": "Either 'hire' or 'reject' based on the conversation"
+        }
+      }
 
-Use only the information provided in the transcript. If any field cannot be extracted, set its value to null.
-Here is the transcript:
-"""
-${transcript}
-"""
-Ensure your output is strictly valid JSON and nothing else.
+      Additionally, consider the following:
+      - **Job Description**: Here are the key requirements for the position:
+      ${jobDescription}
+
+      - **Candidate Skills**: Here are the candidate’s relevant skills:
+      ${candidateSkills.join(", ")}
+
+      - **Work Experience**: Here are the details about the candidate’s work experience:
+      ${JSON.stringify(workExperience)}
+
+      Use only the information provided in the transcript and the details above. If any field cannot be extracted, set its value to null.
+      
+      Here is the transcript:
+      """
+      ${transcript}
+      """
+
+      After analyzing both the conversation and the job requirements, adjust the final decision ("hire" or "reject").
     `;
 
     const response = await openai.chat.completions.create({
