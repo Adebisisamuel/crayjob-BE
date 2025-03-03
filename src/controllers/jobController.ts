@@ -12,9 +12,7 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       jobDescription,
       screeningQuestions,
       locationType,
-      country,
-      countryCode,
-      state,
+      location,
     } = req.body;
 
     if (!req.user) {
@@ -26,6 +24,13 @@ export const createJob = async (req: AuthRequest, res: Response) => {
     if (!allowedLocationTypes.includes(locationType)) {
       res.status(400).json({
         message: "Invalid locationType. Use 'Remote', 'On-site', or 'Hybrid'.",
+      });
+      return;
+    }
+
+    if (!location || !location.country || !location.state) {
+      res.status(400).json({
+        message: "Location (country, state) is required.",
       });
       return;
     }
@@ -44,9 +49,7 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       jobDescription,
       locationType,
       screeningQuestions,
-      country,
-      countryCode,
-      state,
+      location,
     });
 
     await job.save();

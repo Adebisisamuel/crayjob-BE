@@ -18,7 +18,7 @@ const responseHandler_1 = require("../utils/responseHandler");
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
 const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, country, countryCode, state, } = req.body;
+        const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, location, } = req.body;
         if (!req.user) {
             res.status(401).json({ message: "Unauthorized" });
             return;
@@ -27,6 +27,12 @@ const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!allowedLocationTypes.includes(locationType)) {
             res.status(400).json({
                 message: "Invalid locationType. Use 'Remote', 'On-site', or 'Hybrid'.",
+            });
+            return;
+        }
+        if (!location || !location.country || !location.state) {
+            res.status(400).json({
+                message: "Location (country, state) is required.",
             });
             return;
         }
@@ -43,9 +49,7 @@ const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             jobDescription,
             locationType,
             screeningQuestions,
-            country,
-            countryCode,
-            state,
+            location,
         });
         yield job.save();
         res.status(201).json((0, responseHandler_1.successResponse)("Job created successfully", job));

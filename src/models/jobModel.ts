@@ -4,13 +4,15 @@ export interface IJob extends Document {
   userId: mongoose.Schema.Types.ObjectId;
   companyName: string;
   jobTitle: string;
-  location: string;
+  // location: string;
+  location: {
+    country: string;
+    state: string;
+    countryCode: string;
+  };
   jobDescription: string;
   screeningQuestions: string[];
   locationType: string;
-  country: string;
-  countryCode: string;
-  state: string;
   queue: number;
   inProgress: number;
   unreachable: number;
@@ -38,6 +40,11 @@ const jobSchema = new Schema<IJob>(
       required: true,
       trim: true,
     },
+    location: {
+      country: { type: String, trim: true, required: true },
+      state: { type: String, trim: true, required: true },
+      countryCode: { type: String, trim: true, required: false },
+    },
     locationType: {
       type: String,
       required: true,
@@ -52,21 +59,21 @@ const jobSchema = new Schema<IJob>(
       type: [String],
       required: true,
     },
-    countryCode: {
-      type: String,
-      trim: true,
-      required: false,
-    },
-    country: {
-      type: String,
-      trim: true,
-      required: false,
-    },
-    state: {
-      type: String,
-      trim: true,
-      required: false,
-    },
+    // countryCode: {
+    //   type: String,
+    //   trim: true,
+    //   required: false,
+    // },
+    // country: {
+    //   type: String,
+    //   trim: true,
+    //   required: false,
+    // },
+    // state: {
+    //   type: String,
+    //   trim: true,
+    //   required: false,
+    // },
     jobStatus: {
       type: String,
       enum: ["active", "closed"],

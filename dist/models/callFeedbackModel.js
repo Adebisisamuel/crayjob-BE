@@ -51,7 +51,10 @@ const CallFeedbackSchema = new mongoose_1.Schema({
     summary: { type: String },
     strengths: { type: String },
     areasOfImprovement: { type: String },
-    recommendations: { type: String },
+    recommendations: {
+        detailedWriteup: { type: String },
+        finalDecision: { type: String },
+    },
     createdAt: { type: Date, default: Date.now },
 });
 exports.default = mongoose_1.default.model("CallFeedback", CallFeedbackSchema);

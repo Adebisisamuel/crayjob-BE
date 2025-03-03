@@ -21,39 +21,35 @@ const resumeParser_1 = require("../utils/resumeParser");
 const responseHandler_1 = require("../utils/responseHandler");
 const updateAgentPrompts = (screeningQuestions) => __awaiter(void 0, void 0, void 0, function* () {
     const screeningPrompt = `Screening Questions: ${screeningQuestions.join(", ")}`;
-    const initialMessage = "Hello, How are you doing today? I am a recruiter and you have been headhunted for an amazing job and I would love to just ask a few questions in about 5 minutes. Is this a good time to talk?";
+    const initialMessage = "Hello, This is a recruitment call from crayhunt.com";
     const promptModel = `
-        You are an AI voice assistant known as "Candidate Concierge," handling candidate calls for job applications at Crayhunt. You are professional, smart, and full of energy while keeping conversations structured.
-
-        **Your Role:**
-        - Perform an initial screening interview for candidates.
-        - Ask each question clearly and engage dynamically.
-        - Maintain an energetic and engaging conversation.
-        - **Do NOT read or vocalize any extraction summary or feedback to the candidate.** Your role is only to collect responses.
-        
-        **Interview Instructions:**
-        - Start by introducing yourself and asking if it's a good time for a quick call.
-        - Before each question, say: "You have 45 seconds to respond."
-        - If the candidate goes off-topic, gently redirect them to answer.
-        - If a response is unclear, prompt them for clarification.
-        - If they exceed 45 seconds, interrupt politely: "I’ll need to move on now."
-        - At the end of the last question, say: "Awesome, thanks for your time! I'll share this with my team. Have a great day!" and immediately hang up.
-        
-        **VERY IMPORTANT:**
-        - Do NOT summarize, read back, or provide any feedback or extraction details to the candidate.
-        - DO NOT say anything after ending the call.
-        
-        **After the call, extract (but do not speak) the following details internally:**
-        1. Candidate Name - Full name mentioned in the call.
-        2. Call Time - The time when the call took place.
-        3. Call Status - Whether the call was completed, interrupted, or declined.
-        4. Screening Questions & Answers - A structured list mapping each question to the candidate’s responses.
-        5. Summary - A short summary of the candidate's responses.
-        6. Strengths - Key strengths based on the candidate's responses.
-        7. Areas of Improvement - Areas where the candidate could improve.
-        8. Recommendations - Hiring recommendation based on the conversation.
-        
-        You are confident, engaging, and professional at all times. Keep the call efficient and maintain a positive, energetic tone!
+    You are an AI voice assistant known as "Candidate Concierge," handling candidate calls for job applications at Crayhunt. You are professional, smart, and full of energy while keeping conversations structured.
+    *Internal Note:
+    Candidate profile details (such as skills and work experience) are provided in the call's user_data. Use these details to tailor the conversation, but DO NOT read them out loud to the candidate.
+    *Your Role:
+    - Perform an initial screening interview for candidates.
+    - Make it conversational. Always get response from the candidate before proceeding.
+   - After exchanging pleasantries, ask if it’s a good time to talk for 7 minutes. Get a response. If they agree, go ahead to tell the candidate about the job. Just the exact role and company if available. Don’t read verbatim. Be short. Then answer questions on the job if the candidate asks. If they say it’s not a good time, ask them for the better time to call back.
+    - Ask each question clearly and engage dynamically.
+    - Maintain an energetic and engaging conversation.
+    - **Do NOT read or vocalize any extraction summary, candidate profile details, or feedback to the candidate.** Your role is only to collect responses. Make it conversational but don’t drift away too much.
+    *Interview Instructions:
+    - Start by introducing yourself and confirming that it is a good time for a quick call. Get a response.
+    - Allow the candidate to finish each answer without interruption.
+    - If the candidate goes off-topic, gently redirect them back to the question.
+    - If a response is unclear, prompt them for clarification.
+    - At the end of the last question, say: "Awesome, thanks for your time! I'll share this with my team. Have a great day!" and immediately hang up.
+    *VERY IMPORTANT:
+    - Do NOT summarize, read back, or provide any feedback or extraction details to the candidate.
+    *After the call, extract (but do not speak) the following details internally:
+    1. Candidate Name - Full name mentioned in the call.
+    2. Call Time - The time when the call took place.
+    3. Call Status - Whether the call was completed, interrupted, or declined.
+    4. Screening Questions & Answers - A structured list mapping each question to the candidate’s responses.
+    5. Strengths - Key strengths based on the candidate's responses.
+    6. Areas of Improvement - Areas where the candidate could improve.
+    7. Recommendations - Hiring recommendation based on the conversation.
+    You are confident, engaging, and professional at all times. Keep the call efficient and maintain a positive, energetic tone!
   `;
     const combinedPrompt = `${promptModel}\n\n${screeningPrompt}`;
     try {
@@ -94,20 +90,7 @@ const updateAgentPrompts = (screeningQuestions) => __awaiter(void 0, void 0, voi
                                     family: "openai",
                                     model: "gpt-3.5-turbo",
                                     summarization_details: null,
-                                    extraction_details: `
-                      After the call ends, extract and summarize the following details WITHOUT vocalizing them:
-
-                      1. Candidate Name: Extract the candidate's full name from the conversation.
-                      2. Time of Call: The exact timestamp when the call started.
-                      3. Call Status: Indicate whether the call was completed, interrupted, or declined.
-                      4. Screening Questions & Answers: A structured list mapping each question to the candidate’s responses.
-                      5. Summary: A short summary of the candidate's responses.
-                      6. Strengths: Identify key strengths based on the candidate's responses.
-                      7. Areas of Improvement: Highlight areas where the candidate could improve.
-                      8. Recommendations: Provide a hiring recommendation based on the candidate’s answers.
-
-                      IMPORTANT: Do not output any of these details to the candidate. Only extract and store them internally.
-                    `,
+                                    extraction_details: null,
                                     max_tokens: 200,
                                     presence_penalty: 0,
                                     frequency_penalty: 0,
@@ -202,8 +185,11 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         yield jobModel_1.default.findByIdAndUpdate(jobId, { jobStatus: "active" });
-        // Retrieve candidates associated with the job that are in 'queue'
-        const candidates = yield resumeModel_1.default.find({ jobId, status: "queue" });
+        // Retrieve candidates associated with the job that are NOT "shortlisted" or "in-progress"
+        const candidates = yield resumeModel_1.default.find({
+            jobId,
+            status: { $nin: ["shortlisted"] },
+        });
         if (candidates.length === 0) {
             res.status(404).json({ message: "No candidates found for this job" });
             return;
@@ -213,6 +199,7 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         console.log("Waiting for 3 seconds to allow the update to take effect...");
         yield new Promise((resolve) => setTimeout(resolve, 3000));
         const callCustomer = (candidate) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log(candidate === null || candidate === void 0 ? void 0 : candidate.phone, "here");
             try {
                 const payload = {
                     agent_id: process.env.BONLA_AGENT_ID,
@@ -222,6 +209,10 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                         candidateId: candidate.id,
                         jobId: candidate.jobId,
                         userId: candidate.userId,
+                        candidateProfile: {
+                            skills: candidate.skills,
+                            work_experience: candidate.work_experience,
+                        },
                     },
                 };
                 const response = yield axios_1.default.post(`${process.env.BONLA_API_BASE_URL}call`, payload, {
@@ -247,6 +238,8 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                     id: candidate._id,
                     jobId,
                     userId: req.user.id,
+                    skills: candidate.skills,
+                    work_experience: candidate.work_experience,
                 });
                 // Mark this phone as called
                 calledPhones.add(phone);
@@ -268,14 +261,16 @@ var CandidateStatus;
     CandidateStatus["InProgress"] = "in-progress";
     CandidateStatus["Unreachable"] = "unreachable";
     CandidateStatus["Shortlisted"] = "shortlisted";
+    CandidateStatus["Rejected"] = "rejected";
 })(CandidateStatus || (CandidateStatus = {}));
 const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     try {
         const payload = req.body;
         const candidateId = (_b = (_a = payload.context_details) === null || _a === void 0 ? void 0 : _a.recipient_data) === null || _b === void 0 ? void 0 : _b.candidateId;
         const jobId = (_d = (_c = payload.context_details) === null || _c === void 0 ? void 0 : _c.recipient_data) === null || _d === void 0 ? void 0 : _d.jobId;
         const userId = (_f = (_e = payload.context_details) === null || _e === void 0 ? void 0 : _e.recipient_data) === null || _f === void 0 ? void 0 : _f.userId;
+        // Determine initial status from the callback status
         let candidateStatus;
         switch (payload.status) {
             case "initiated":
@@ -287,18 +282,37 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 break;
             case "completed":
             case "success":
-                candidateStatus = CandidateStatus.Shortlisted;
+                // For completed calls, we will further refine the status below
+                candidateStatus = CandidateStatus.InProgress;
                 break;
             default:
                 candidateStatus = CandidateStatus.InProgress;
                 break;
         }
-        yield resumeModel_1.default.findByIdAndUpdate(candidateId, {
-            status: candidateStatus,
-        });
         if (payload.transcript) {
-            const extractedData = yield (0, resumeParser_1.extractCallDetails)(payload.transcript);
-            const filter = { jobId, candidateId };
+            const job = yield jobModel_1.default.findById(jobId);
+            const jobDescription = (job === null || job === void 0 ? void 0 : job.jobDescription) || "";
+            const candidateSkills = ((_h = (_g = payload.context_details) === null || _g === void 0 ? void 0 : _g.recipient_data) === null || _h === void 0 ? void 0 : _h.skills) || [];
+            const workExperience = ((_k = (_j = payload.context_details) === null || _j === void 0 ? void 0 : _j.recipient_data) === null || _k === void 0 ? void 0 : _k.work_experience) || [];
+            const extractedData = yield (0, resumeParser_1.extractCallDetails)(payload.transcript, jobDescription, candidateSkills, workExperience);
+            // Business logic for final status:
+            // Business logic for final status when the call is completed:
+            if (payload.status === "completed" || payload.status === "success") {
+                if (extractedData.recommendations &&
+                    extractedData.recommendations.finalDecision &&
+                    extractedData.recommendations.finalDecision.toLowerCase() === "hire") {
+                    candidateStatus = CandidateStatus.Shortlisted;
+                }
+                else if (extractedData.recommendations &&
+                    extractedData.recommendations.finalDecision &&
+                    extractedData.recommendations.finalDecision.toLowerCase() === "reject") {
+                    candidateStatus = CandidateStatus.Rejected;
+                }
+                else {
+                    // Candidate remains in-progress to allow for another call attempt.
+                    candidateStatus = CandidateStatus.InProgress;
+                }
+            }
             // Helper: sanitize keys by replacing dots with underscores
             const sanitizeKeys = (obj) => {
                 const sanitized = {};
@@ -325,13 +339,18 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 recommendations: extractedData.recommendations,
             };
             const options = { new: true, upsert: true };
-            const response = yield callFeedbackModel_1.default.findOneAndUpdate(filter, updateData, options);
-            console.log("Feedback upserted", response);
+            const feedbackResponse = yield callFeedbackModel_1.default.findOneAndUpdate({ jobId, candidateId }, updateData, options);
+            console.log("Feedback upserted", feedbackResponse);
         }
         else {
-            console.log(candidateId, jobId, userId, "Feedback not updated; conditions not met");
+            console.log(candidateId, jobId, userId, "No transcript provided; candidate status based solely on callback payload.");
         }
-        res.status(201).json((0, responseHandler_1.successResponse)("Callback processed successfully"));
+        // Update the candidate's status.
+        yield resumeModel_1.default.findByIdAndUpdate(candidateId, {
+            status: candidateStatus,
+        });
+        console.log(`Candidate ${candidateId} for job ${jobId} updated to status: ${candidateStatus}`);
+        res.status(201).json({ message: "Callback processed successfully" });
     }
     catch (error) {
         console.error("Error in callCandidates:", error.message);
