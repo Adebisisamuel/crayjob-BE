@@ -242,3 +242,65 @@ export const deleteCandidate = async (req: AuthRequest, res: Response) => {
     res.status(500).json(errorResponse("Internal Server Error"));
   }
 };
+
+export const updateCandidateStatus = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      res.status(404).json(errorResponse("Unauthorized"));
+      return;
+    }
+
+    const { candidateId } = req.params;
+    const { status } = req.body;
+
+    // Validate incoming data
+    if (!status) {
+      res.status(400).json({ message: "Missing required field: status" });
+      return;
+    }
+
+    // Find the candidate by ID
+    const candidate = await ResumeModel.findById(candidateId);
+    if (!candidate) {
+      res.status(404).json({ message: "Candidate not found" });
+      return;
+    }
+    const currentStatus = candidate.status;
+    if (!currentStatus) {
+      res.status(400).json({ message: "Candidate status is undefined" });
+      return;
+    }
+
+    // Define allowed transitions based on current status
+    const allowedTransitions: { [key: string]: string[] } = {
+      queue: ["queue", "shortlisted", "rejected"],
+      rejected: ["queue", "shortlisted", "rejected"],
+      shortlisted: ["queue", "shortlisted", "rejected"],
+      "in-progress": [], // No transitions allowed from "in-progress"
+    };
+
+    if (!allowedTransitions[currentStatus].includes(status)) {
+      res.status(400).json({
+        message: `Invalid status transition from ${candidate.status} to ${status}`,
+      });
+      return;
+    }
+
+    // Update the status and save
+    candidate.status = status;
+    await candidate.save();
+
+    // Return the updated candidate details
+    res.status(200).json({
+      message: "Candidate status updated successfully",
+      candidate,
+    });
+  } catch (error) {
+    console.error("Error updating candidate status:", error);
+    res.status(500).json({ message: "Internal server error" });
+    return;
+  }
+};

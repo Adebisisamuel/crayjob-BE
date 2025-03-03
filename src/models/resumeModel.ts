@@ -10,7 +10,7 @@ export interface IResume extends Document {
   email?: string;
   phone?: string;
   skills?: string[];
-  work_experience?: { title: string; comapany: string; duration: string }[];
+  work_experience?: { title: string; company: string; duration: string }[];
   status?: string;
 }
 

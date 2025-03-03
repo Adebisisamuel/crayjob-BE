@@ -3,6 +3,7 @@ import {
   deleteCandidate,
   getCandidateByJobs,
   updateCandidateDetails,
+  updateCandidateStatus,
   //   // getResumesByTicket,
   uploadResumes,
 } from "../controllers/resumeController";
@@ -22,6 +23,11 @@ router.delete(
   "/delete-candidate/:candidateId",
   authenticateUser,
   deleteCandidate
+);
+router.patch(
+  "/candidates/:candidateId/status",
+  authenticateUser,
+  updateCandidateStatus
 );
 
 export default router;
