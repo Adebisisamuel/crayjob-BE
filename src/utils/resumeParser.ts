@@ -173,6 +173,11 @@ export const extractCallDetails = async (
       - **Work Experience**: Here are the details about the candidate’s work experience:
       ${JSON.stringify(workExperience)}
 
+      Please ensure the following:
+      - Be **fair and balanced** in your assessment. Avoid being too strict, and provide an objective evaluation of the candidate based on their responses.
+      - **Do not penalize** the candidate too harshly for minor gaps or inconsistencies in their responses. Focus on their strengths and provide constructive suggestions for improvement where applicable.
+      - Consider that candidates might be nervous or have off moments during the call, so try to be understanding and give them the benefit of the doubt.
+
       Use only the information provided in the transcript and the details above. If any field cannot be extracted, set its value to null.
       
       Here is the transcript:
@@ -180,7 +185,7 @@ export const extractCallDetails = async (
       ${transcript}
       """
 
-      After analyzing both the conversation and the job requirements, adjust the final decision ("hire" or "reject").
+      After analyzing both the conversation and the job requirements, adjust the final decision ("hire" or "reject") with a fair mindset.
     `;
 
     const response = await openai.chat.completions.create({
