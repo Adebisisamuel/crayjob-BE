@@ -88,7 +88,7 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
 
           console.log("Extracted Resume Text:", extractedText);
 
-          const { name, email, phone, skills, work_experience } =
+          const { name, email, phone, location, skills, work_experience } =
             await extractCandidateDetails(extractedText);
 
           // Check for duplicate phone number for the same job.
@@ -110,6 +110,7 @@ export const uploadResumes = async (req: AuthRequest, res: Response) => {
             name,
             email,
             phone,
+            location,
             skills,
             work_experience,
           });

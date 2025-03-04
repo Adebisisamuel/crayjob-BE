@@ -9,6 +9,7 @@ export interface IResume extends Document {
   name?: string;
   email?: string;
   phone?: string;
+  location?: string;
   skills?: string[];
   work_experience?: { title: string; company: string; duration: string }[];
   status?: string;
@@ -47,6 +48,9 @@ const ResumeSchema = new Schema<IResume>(
       type: String,
     },
     phone: {
+      type: String,
+    },
+    location: {
       type: String,
     },
     skills: {

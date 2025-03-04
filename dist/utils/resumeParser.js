@@ -65,6 +65,7 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
       - Full name
       - Email
       - Phone number
+      - Location (Extract the city, state, and country if available)
       - Skills (At least 3 relevant skills)
       - Work Experience (Include 'title', 'company', and 'duration' for each job)
 
@@ -80,6 +81,7 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
         "name": "John Doe",
         "email": "johndoe@gmail.com",
         "phone": "+1 123 456 7890",
+        "location": "San Francisco, CA, USA",
         "skills": ["JavaScript", "React", "Node.js"],
         "work_experience": [
           {
@@ -118,6 +120,7 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
             name: parsedData.name || "",
             email: parsedData.email || "",
             phone: parsedData.phone || "",
+            location: parsedData.location || null,
             skills: parsedData.skills || [],
             work_experience: parsedData.work_experience || [],
         };
@@ -128,6 +131,7 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
             name: "",
             email: "",
             phone: "",
+            location: null,
             skills: [],
             work_experience: [],
         };
@@ -180,7 +184,7 @@ const extractCallDetails = (transcript, jobDescription, candidateSkills, workExp
       After analyzing both the conversation and the job requirements, adjust the final decision ("hire" or "reject") with a fair mindset.
     `;
         const response = yield openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-3.5-turbo",
             messages: [{ role: "system", content: prompt }],
             temperature: 0.1,
         });

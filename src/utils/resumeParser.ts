@@ -63,6 +63,7 @@ export const extractCandidateDetails = async (text: string) => {
       - Full name
       - Email
       - Phone number
+      - Location (Extract the city, state, and country if available)
       - Skills (At least 3 relevant skills)
       - Work Experience (Include 'title', 'company', and 'duration' for each job)
 
@@ -78,6 +79,7 @@ export const extractCandidateDetails = async (text: string) => {
         "name": "John Doe",
         "email": "johndoe@gmail.com",
         "phone": "+1 123 456 7890",
+        "location": "San Francisco, CA, USA",
         "skills": ["JavaScript", "React", "Node.js"],
         "work_experience": [
           {
@@ -124,6 +126,7 @@ export const extractCandidateDetails = async (text: string) => {
       name: parsedData.name || "",
       email: parsedData.email || "",
       phone: parsedData.phone || "",
+      location: parsedData.location || null,
       skills: parsedData.skills || [],
       work_experience: parsedData.work_experience || [],
     };
@@ -133,6 +136,7 @@ export const extractCandidateDetails = async (text: string) => {
       name: "",
       email: "",
       phone: "",
+      location: null,
       skills: [],
       work_experience: [],
     };
@@ -190,7 +194,7 @@ export const extractCallDetails = async (
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "system", content: prompt }],
       temperature: 0.1,
     });

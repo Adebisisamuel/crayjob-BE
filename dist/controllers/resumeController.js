@@ -88,7 +88,7 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         continue;
                     }
                     console.log("Extracted Resume Text:", extractedText);
-                    const { name, email, phone, skills, work_experience } = yield (0, resumeParser_1.extractCandidateDetails)(extractedText);
+                    const { name, email, phone, location, skills, work_experience } = yield (0, resumeParser_1.extractCandidateDetails)(extractedText);
                     // Check for duplicate phone number for the same job.
                     if (phone) {
                         const duplicate = yield resumeModel_1.default.findOne({ jobId, phone });
@@ -107,6 +107,7 @@ const uploadResumes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         name,
                         email,
                         phone,
+                        location,
                         skills,
                         work_experience,
                     });

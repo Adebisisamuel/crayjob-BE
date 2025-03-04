@@ -66,6 +66,9 @@ const ResumeSchema = new mongoose_1.Schema({
     phone: {
         type: String,
     },
+    location: {
+        type: String,
+    },
     skills: {
         type: [String],
     },
