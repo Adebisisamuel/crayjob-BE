@@ -54,7 +54,6 @@ export const callCandidates = async (
       skills: string[];
       work_experience: any;
     }) => {
-      console.log(candidate?.phone, "here");
       try {
         const payload = {
           agent_id: process.env.BONLA_AGENT_ID,
