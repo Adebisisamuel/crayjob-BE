@@ -97,7 +97,8 @@ const extractCandidateDetails = (text) => __awaiter(void 0, void 0, void 0, func
     `;
         console.log("Sending prompt to OpenAI...");
         const response = yield openai.chat.completions.create({
-            model: "gpt-4",
+            // model: "gpt-4",
+            model: "gpt-3.5-turbo",
             messages: [{ role: "system", content: prompt }],
             temperature: 0.1,
         });
