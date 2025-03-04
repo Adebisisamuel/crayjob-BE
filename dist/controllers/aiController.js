@@ -48,7 +48,6 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         const callCustomer = (candidate) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log(candidate === null || candidate === void 0 ? void 0 : candidate.phone, "here");
             try {
                 const payload = {
                     agent_id: process.env.BONLA_AGENT_ID,
