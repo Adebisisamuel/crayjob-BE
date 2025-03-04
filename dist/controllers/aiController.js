@@ -28,8 +28,8 @@ const updateAgentPrompts = (screeningQuestions) => __awaiter(void 0, void 0, voi
     Candidate profile details (such as skills and work experience) are provided in the call's user_data. Use these details to tailor the conversation, but DO NOT read them out loud to the candidate.
     *Your Role:
     - Perform an initial screening interview for candidates.
-    - Make it conversational. Always get response from the candidate before proceeding.
-   - After exchanging pleasantries, ask if it’s a good time to talk for 7 minutes. Get a response. If they agree, go ahead to tell the candidate about the job. Just the exact role and company if available. Don’t read verbatim. Be short. Then answer questions on the job if the candidate asks. If they say it’s not a good time, ask them for the better time to call back.
+    - Make it conversational. Always get a response from the candidate before proceeding.
+    - After exchanging pleasantries, ask if it’s a good time to talk for 7 minutes. Get a response. If they agree, go ahead to tell the candidate about the job. Just the exact role and company if available. Don’t read verbatim. Be short. Then answer questions on the job if the candidate asks. If they say it’s not a good time, ask them for the better time to call back.
     - Ask each question clearly and engage dynamically.
     - Maintain an energetic and engaging conversation.
     - **Do NOT read or vocalize any extraction summary, candidate profile details, or feedback to the candidate.** Your role is only to collect responses. Make it conversational but don’t drift away too much.
@@ -50,7 +50,10 @@ const updateAgentPrompts = (screeningQuestions) => __awaiter(void 0, void 0, voi
     6. Areas of Improvement - Areas where the candidate could improve.
     7. Recommendations - Hiring recommendation based on the conversation.
     You are confident, engaging, and professional at all times. Keep the call efficient and maintain a positive, energetic tone!
-  `;
+    **Additional Instructions:**
+    - If the candidate says they’re not interested in the job, ask them if they can refer another candidate. Tell them you will send them an email after the call, which they can reply to with the resume or contact of the referred candidate.
+    - Ask the candidate to send their resume to the email they’ll receive after the call.
+`;
     const combinedPrompt = `${promptModel}\n\n${screeningPrompt}`;
     try {
         const response = yield axios_1.default.put(`${process.env.BONLA_API_BASE_URL}v2/agent/${process.env.BONLA_AGENT_ID}`, {
@@ -262,6 +265,8 @@ var CandidateStatus;
     CandidateStatus["Unreachable"] = "unreachable";
     CandidateStatus["Shortlisted"] = "shortlisted";
     CandidateStatus["Rejected"] = "rejected";
+    CandidateStatus["InReview"] = "in-review";
+    CandidateStatus["NeedsHRReview"] = "needs-hr-review";
 })(CandidateStatus || (CandidateStatus = {}));
 const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
@@ -283,7 +288,7 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             case "completed":
             case "success":
                 // For completed calls, we will further refine the status below
-                candidateStatus = CandidateStatus.InProgress;
+                candidateStatus = CandidateStatus.InReview;
                 break;
             default:
                 candidateStatus = CandidateStatus.InProgress;
@@ -309,8 +314,8 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                     candidateStatus = CandidateStatus.Rejected;
                 }
                 else {
-                    // Candidate remains in-progress to allow for another call attempt.
-                    candidateStatus = CandidateStatus.InProgress;
+                    // No clear decision was made so mark as needing HR review.
+                    candidateStatus = CandidateStatus.NeedsHRReview;
                 }
             }
             // Helper: sanitize keys by replacing dots with underscores

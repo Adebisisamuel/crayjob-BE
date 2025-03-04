@@ -276,10 +276,30 @@ export const updateCandidateStatus = async (
 
     // Define allowed transitions based on current status
     const allowedTransitions: { [key: string]: string[] } = {
-      queue: ["queue", "shortlisted", "rejected"],
-      rejected: ["queue", "shortlisted", "rejected"],
-      shortlisted: ["queue", "shortlisted", "rejected"],
+      queue: [
+        "queue",
+        "shortlisted",
+        "rejected",
+        "in-review",
+        "needs-hr-review",
+      ],
+      rejected: [
+        "queue",
+        "shortlisted",
+        "rejected",
+        "in-review",
+        "needs-hr-review",
+      ],
+      shortlisted: [
+        "queue",
+        "shortlisted",
+        "rejected",
+        "in-review",
+        "needs-hr-review",
+      ],
       "in-progress": [], // No transitions allowed from "in-progress"
+      "in-review": ["shortlisted", "rejected", "needs-hr-review"],
+      "needs-hr-review": ["shortlisted", "rejected", "in-review"],
     };
 
     if (!allowedTransitions[currentStatus].includes(status)) {

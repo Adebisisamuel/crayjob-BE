@@ -12,4 +12,5 @@ router.post("/upload", authMiddleware_1.authenticateUser, resumeController_1.upl
 router.get("/get-candidates/:jobId", authMiddleware_1.authenticateUser, resumeController_1.getCandidateByJobs);
 router.put("/update-candidate/:candidateId", authMiddleware_1.authenticateUser, resumeController_1.updateCandidateDetails);
 router.delete("/delete-candidate/:candidateId", authMiddleware_1.authenticateUser, resumeController_1.deleteCandidate);
+router.patch("/candidates/:candidateId/status", authMiddleware_1.authenticateUser, resumeController_1.updateCandidateStatus);
 exports.default = router;

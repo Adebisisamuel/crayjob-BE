@@ -110,6 +110,8 @@ export const getAllJob = async (req: AuthRequest, res: Response) => {
       unreachable: 0,
       shortlisted: 0,
       rejected: 0,
+      "in-review": 0,
+      "needs-hr-review": 0,
     };
 
     // Extend the job object type to include candidatesStatus.

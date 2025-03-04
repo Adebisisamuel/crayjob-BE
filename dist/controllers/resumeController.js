@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCandidate = exports.updateCandidateDetails = exports.getCandidateByJobs = exports.uploadResumes = void 0;
+exports.updateCandidateStatus = exports.deleteCandidate = exports.updateCandidateDetails = exports.getCandidateByJobs = exports.uploadResumes = void 0;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const mammoth_1 = __importDefault(require("mammoth"));
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -227,3 +227,76 @@ const deleteCandidate = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.deleteCandidate = deleteCandidate;
+const updateCandidateStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(404).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const { candidateId } = req.params;
+        const { status } = req.body;
+        // Validate incoming data
+        if (!status) {
+            res.status(400).json({ message: "Missing required field: status" });
+            return;
+        }
+        // Find the candidate by ID
+        const candidate = yield resumeModel_1.default.findById(candidateId);
+        if (!candidate) {
+            res.status(404).json({ message: "Candidate not found" });
+            return;
+        }
+        const currentStatus = candidate.status;
+        if (!currentStatus) {
+            res.status(400).json({ message: "Candidate status is undefined" });
+            return;
+        }
+        // Define allowed transitions based on current status
+        const allowedTransitions = {
+            queue: [
+                "queue",
+                "shortlisted",
+                "rejected",
+                "in-review",
+                "needs-hr-review",
+            ],
+            rejected: [
+                "queue",
+                "shortlisted",
+                "rejected",
+                "in-review",
+                "needs-hr-review",
+            ],
+            shortlisted: [
+                "queue",
+                "shortlisted",
+                "rejected",
+                "in-review",
+                "needs-hr-review",
+            ],
+            "in-progress": [], // No transitions allowed from "in-progress"
+            "in-review": ["shortlisted", "rejected", "needs-hr-review"],
+            "needs-hr-review": ["shortlisted", "rejected", "in-review"],
+        };
+        if (!allowedTransitions[currentStatus].includes(status)) {
+            res.status(400).json({
+                message: `Invalid status transition from ${candidate.status} to ${status}`,
+            });
+            return;
+        }
+        // Update the status and save
+        candidate.status = status;
+        yield candidate.save();
+        // Return the updated candidate details
+        res.status(200).json({
+            message: "Candidate status updated successfully",
+            candidate,
+        });
+    }
+    catch (error) {
+        console.error("Error updating candidate status:", error);
+        res.status(500).json({ message: "Internal server error" });
+        return;
+    }
+});
+exports.updateCandidateStatus = updateCandidateStatus;

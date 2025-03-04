@@ -78,7 +78,15 @@ const ResumeSchema = new mongoose_1.Schema({
     ],
     status: {
         type: String,
-        enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],
+        enum: [
+            "queue",
+            "in-progress",
+            "unreachable",
+            "shortlisted",
+            "rejected",
+            "in-review",
+            "needs-hr-review",
+        ],
         default: "queue", // default status when resume is first uploaded
     },
 }, { timestamps: true });

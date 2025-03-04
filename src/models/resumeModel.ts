@@ -61,7 +61,15 @@ const ResumeSchema = new Schema<IResume>(
     ],
     status: {
       type: String,
-      enum: ["queue", "in-progress", "unreachable", "shortlisted", "rejected"],
+      enum: [
+        "queue",
+        "in-progress",
+        "unreachable",
+        "shortlisted",
+        "rejected",
+        "in-review",
+        "needs-hr-review",
+      ],
       default: "queue", // default status when resume is first uploaded
     },
   },

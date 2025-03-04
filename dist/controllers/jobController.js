@@ -104,6 +104,8 @@ const getAllJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             unreachable: 0,
             shortlisted: 0,
             rejected: 0,
+            "in-review": 0,
+            "needs-hr-review": 0,
         };
         // Attach the candidatesStatus counts to each job, merging default statuses with any actual counts.
         const jobsWithCounts = jobs.map((job) => {

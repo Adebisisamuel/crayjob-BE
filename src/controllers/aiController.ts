@@ -289,6 +289,8 @@ enum CandidateStatus {
   Unreachable = "unreachable",
   Shortlisted = "shortlisted",
   Rejected = "rejected",
+  InReview = "in-review",
+  NeedsHRReview = "needs-hr-review",
 }
 
 export const bolnaCallback: any = async (
@@ -316,7 +318,7 @@ export const bolnaCallback: any = async (
       case "completed":
       case "success":
         // For completed calls, we will further refine the status below
-        candidateStatus = CandidateStatus.InProgress;
+        candidateStatus = CandidateStatus.InReview;
         break;
       default:
         candidateStatus = CandidateStatus.InProgress;
@@ -353,8 +355,8 @@ export const bolnaCallback: any = async (
         ) {
           candidateStatus = CandidateStatus.Rejected;
         } else {
-          // Candidate remains in-progress to allow for another call attempt.
-          candidateStatus = CandidateStatus.InProgress;
+          // No clear decision was made so mark as needing HR review.
+          candidateStatus = CandidateStatus.NeedsHRReview;
         }
       }
 
