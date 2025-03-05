@@ -62,6 +62,8 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                             work_experience: candidate.work_experience,
                             screening_questions: job.screeningQuestions,
                             job_description: job.jobDescription,
+                            company_name: job.companyName,
+                            candidate_name: candidate.name,
                         },
                     },
                 };

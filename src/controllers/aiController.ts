@@ -68,6 +68,8 @@ export const callCandidates = async (
               work_experience: candidate.work_experience,
               screening_questions: job.screeningQuestions,
               job_description: job.jobDescription,
+              company_name: job.companyName,
+              candidate_name: candidate.name,
             },
           },
         };
