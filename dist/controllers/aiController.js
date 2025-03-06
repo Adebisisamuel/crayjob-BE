@@ -54,17 +54,18 @@ const callCandidates = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                     recipient_phone_number: candidate.phone, // Ensure this is in E.164 format
                     from_phone_number: process.env.BONLA_FROM_PHONE_NUMBER,
                     user_data: {
-                        candidateId: candidate.id,
-                        jobId: candidate.jobId,
-                        userId: candidate.userId,
-                        candidateProfile: {
-                            skills: candidate.skills,
-                            work_experience: candidate.work_experience,
-                            screening_questions: job.screeningQuestions,
-                            job_description: job.jobDescription,
-                            company_name: job.companyName,
-                            candidate_name: candidate.name,
-                        },
+                        candidate_id: candidate.id,
+                        job_id: candidate.jobId,
+                        job_title: job.jobTitle,
+                        job_country: job.location.country,
+                        job_state: job.location.state,
+                        company_name: job.companyName,
+                        user_id: candidate.userId,
+                        skills: candidate.skills,
+                        work_experience: candidate.work_experience,
+                        screening_questions: job.screeningQuestions,
+                        job_description: job.jobDescription,
+                        candidate_name: candidate.name,
                     },
                 };
                 const response = yield axios_1.default.post(`${process.env.BONLA_API_BASE_URL}call`, payload, {
@@ -121,9 +122,9 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     try {
         const payload = req.body;
-        const candidateId = (_b = (_a = payload.context_details) === null || _a === void 0 ? void 0 : _a.recipient_data) === null || _b === void 0 ? void 0 : _b.candidateId;
-        const jobId = (_d = (_c = payload.context_details) === null || _c === void 0 ? void 0 : _c.recipient_data) === null || _d === void 0 ? void 0 : _d.jobId;
-        const userId = (_f = (_e = payload.context_details) === null || _e === void 0 ? void 0 : _e.recipient_data) === null || _f === void 0 ? void 0 : _f.userId;
+        const candidateId = (_b = (_a = payload.context_details) === null || _a === void 0 ? void 0 : _a.recipient_data) === null || _b === void 0 ? void 0 : _b.candidate_id;
+        const jobId = (_d = (_c = payload.context_details) === null || _c === void 0 ? void 0 : _c.recipient_data) === null || _d === void 0 ? void 0 : _d.job_id;
+        const userId = (_f = (_e = payload.context_details) === null || _e === void 0 ? void 0 : _e.recipient_data) === null || _f === void 0 ? void 0 : _f.user_id;
         // Determine initial status from the callback status
         let candidateStatus;
         switch (payload.status) {
