@@ -122,6 +122,7 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     try {
         const payload = req.body;
+        console.log(payload, "test");
         const candidateId = (_b = (_a = payload.context_details) === null || _a === void 0 ? void 0 : _a.recipient_data) === null || _b === void 0 ? void 0 : _b.candidate_id;
         const jobId = (_d = (_c = payload.context_details) === null || _c === void 0 ? void 0 : _c.recipient_data) === null || _d === void 0 ? void 0 : _d.job_id;
         const userId = (_f = (_e = payload.context_details) === null || _e === void 0 ? void 0 : _e.recipient_data) === null || _f === void 0 ? void 0 : _f.user_id;
