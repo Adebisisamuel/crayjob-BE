@@ -60,17 +60,18 @@ export const callCandidates = async (
           recipient_phone_number: candidate.phone, // Ensure this is in E.164 format
           from_phone_number: process.env.BONLA_FROM_PHONE_NUMBER,
           user_data: {
-            candidateId: candidate.id,
-            jobId: candidate.jobId,
-            userId: candidate.userId,
-            candidateProfile: {
-              skills: candidate.skills,
-              work_experience: candidate.work_experience,
-              screening_questions: job.screeningQuestions,
-              job_description: job.jobDescription,
-              company_name: job.companyName,
-              candidate_name: candidate.name,
-            },
+            candidate_id: candidate.id,
+            job_id: candidate.jobId,
+            job_title: job.jobTitle,
+            job_country: job.location.country,
+            job_state: job.location.state,
+            company_name: job.companyName,
+            user_id: candidate.userId,
+            skills: candidate.skills,
+            work_experience: candidate.work_experience,
+            screening_questions: job.screeningQuestions,
+            job_description: job.jobDescription,
+            candidate_name: candidate.name,
           },
         };
 
@@ -139,9 +140,9 @@ export const bolnaCallback: any = async (
   try {
     const payload = req.body;
 
-    const candidateId = payload.context_details?.recipient_data?.candidateId;
-    const jobId = payload.context_details?.recipient_data?.jobId;
-    const userId = payload.context_details?.recipient_data?.userId;
+    const candidateId = payload.context_details?.recipient_data?.candidate_id;
+    const jobId = payload.context_details?.recipient_data?.job_id;
+    const userId = payload.context_details?.recipient_data?.user_id;
 
     // Determine initial status from the callback status
     let candidateStatus: CandidateStatus;
