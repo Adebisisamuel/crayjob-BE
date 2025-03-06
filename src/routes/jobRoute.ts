@@ -16,7 +16,7 @@ const router = express.Router();
 router.post("/create-job", authenticateUser, createJob);
 router.get("/get-jobs", authenticateUser, getAllJob);
 router.get("/getone-ticket/:id", authenticateUser, getJob);
-router.put("/update-ticket/:id", authenticateUser, updateJob);
+router.put("/update-job/:id", authenticateUser, updateJob);
 router.delete("/delete-job/:id", authenticateUser, deleteJob);
 router.get("/jobs-active", authenticateUser, getActiveJob);
 router.get("/closed-jobs", authenticateUser, getClosedJob);

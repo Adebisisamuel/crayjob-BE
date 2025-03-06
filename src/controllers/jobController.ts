@@ -166,22 +166,58 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
       res.status(401).json(errorResponse("Unauthorized"));
       return;
     }
+
+    const { companyName, jobTitle, jobDescription, locationType, location } =
+      req.body;
+
+    if (
+      locationType &&
+      !["Remote", "On-site", "Hybrid"].includes(locationType)
+    ) {
+      res
+        .status(400)
+        .json(
+          errorResponse(
+            "Invalid locationType. Use 'Remote', 'On-site', or 'Hybrid'."
+          )
+        );
+      return;
+    }
+
+    if (location) {
+      if (!location.country || !location.state) {
+        res
+          .status(400)
+          .json(errorResponse("Location (country, state) is required."));
+        return;
+      }
+    }
+
+    const updateFields: any = {};
+
+    if (companyName) updateFields.companyName = companyName;
+    if (jobTitle) updateFields.jobTitle = jobTitle;
+    if (jobDescription) updateFields.jobDescription = jobDescription;
+    if (locationType) updateFields.locationType = locationType;
+    if (location) updateFields.location = location;
+
     const job = await Job.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        user: req.user.id,
-      },
-      { $set: req.body },
+      { _id: req.params.id, userId: req.user.id },
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
+
     if (!job) {
-      res.status(404).json(errorResponse("Ticket not found or unauthorized"));
+      res.status(404).json(errorResponse("Job not found or unauthorized"));
+      return;
     }
+
     res.json(successResponse("Job Updated Successfully", job));
     return;
   } catch (error) {
-    console.log("Error Updating Job", error);
+    console.error("Error Updating Job:", error);
     res.status(500).json(errorResponse("Internal Server Error"));
+    return;
   }
 };
 

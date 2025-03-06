@@ -10,7 +10,7 @@ const router = express_1.default.Router();
 router.post("/create-job", authMiddleware_1.authenticateUser, jobController_1.createJob);
 router.get("/get-jobs", authMiddleware_1.authenticateUser, jobController_1.getAllJob);
 router.get("/getone-ticket/:id", authMiddleware_1.authenticateUser, jobController_1.getJob);
-router.put("/update-ticket/:id", authMiddleware_1.authenticateUser, jobController_1.updateJob);
+router.put("/update-job/:id", authMiddleware_1.authenticateUser, jobController_1.updateJob);
 router.delete("/delete-job/:id", authMiddleware_1.authenticateUser, jobController_1.deleteJob);
 router.get("/jobs-active", authMiddleware_1.authenticateUser, jobController_1.getActiveJob);
 router.get("/closed-jobs", authMiddleware_1.authenticateUser, jobController_1.getClosedJob);

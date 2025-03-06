@@ -150,19 +150,45 @@ const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const job = yield jobModel_1.Job.findOneAndUpdate({
-            _id: req.params.id,
-            user: req.user.id,
-        }, { $set: req.body }, { new: true, runValidators: true });
+        const { companyName, jobTitle, jobDescription, locationType, location } = req.body;
+        if (locationType &&
+            !["Remote", "On-site", "Hybrid"].includes(locationType)) {
+            res
+                .status(400)
+                .json((0, responseHandler_1.errorResponse)("Invalid locationType. Use 'Remote', 'On-site', or 'Hybrid'."));
+            return;
+        }
+        if (location) {
+            if (!location.country || !location.state) {
+                res
+                    .status(400)
+                    .json((0, responseHandler_1.errorResponse)("Location (country, state) is required."));
+                return;
+            }
+        }
+        const updateFields = {};
+        if (companyName)
+            updateFields.companyName = companyName;
+        if (jobTitle)
+            updateFields.jobTitle = jobTitle;
+        if (jobDescription)
+            updateFields.jobDescription = jobDescription;
+        if (locationType)
+            updateFields.locationType = locationType;
+        if (location)
+            updateFields.location = location;
+        const job = yield jobModel_1.Job.findOneAndUpdate({ _id: req.params.id, userId: req.user.id }, { $set: updateFields }, { new: true, runValidators: true });
         if (!job) {
-            res.status(404).json((0, responseHandler_1.errorResponse)("Ticket not found or unauthorized"));
+            res.status(404).json((0, responseHandler_1.errorResponse)("Job not found or unauthorized"));
+            return;
         }
         res.json((0, responseHandler_1.successResponse)("Job Updated Successfully", job));
         return;
     }
     catch (error) {
-        console.log("Error Updating Job", error);
+        console.error("Error Updating Job:", error);
         res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+        return;
     }
 });
 exports.updateJob = updateJob;
