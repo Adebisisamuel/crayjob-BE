@@ -5,7 +5,7 @@ import CallFeedback from "../models/callFeedbackModel";
 import JobModel from "../models/jobModel";
 import ResumeModel from "../models/resumeModel";
 import { extractCallDetails } from "../utils/resumeParser";
-import { errorResponse } from "../utils/responseHandler";
+import { errorResponse, successResponse } from "../utils/responseHandler";
 import { AuthRequest } from "../Types/authTypes";
 
 export const callCandidates = async (
@@ -256,6 +256,80 @@ export const bolnaCallback: any = async (
     res.status(201).json({ message: "Callback processed successfully" });
   } catch (error: any) {
     console.error("Error in callCandidates:", error.message);
+    next(error);
+  }
+};
+
+export const getTotalEngagementStats = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?.id;
+
+    // Fetch feedbacks for the specific user
+    const feedbacks = await CallFeedback.find({ userId: userId });
+    if (!feedbacks || feedbacks.length === 0) {
+      res.status(404).json({ message: "No feedback found." });
+      return;
+    }
+
+    // Initialize counters for different call statuses
+    let totalCallsInitiated = 0;
+    let totalCallsAnswered = 0;
+    let totalCallsCompleted = 0;
+    let totalShortlisted = 0;
+
+    feedbacks.forEach((feedback) => {
+      totalCallsInitiated += 1;
+
+      if (feedback.status === "completed" || feedback.status === "success") {
+        totalCallsCompleted += 1;
+      }
+      if (feedback.status === "initiated" || feedback.status === "ringing") {
+        totalCallsAnswered += 1;
+      }
+
+      // Count the number of shortlisted candidates
+      if (feedback.status === "shortlisted") {
+        totalShortlisted += 1;
+      }
+    });
+
+    // Fetch total number of candidates (resumes) for the specific user
+    const totalCandidates = await ResumeModel.countDocuments({
+      userId: userId,
+    });
+    const aiEngagementPercent =
+      totalCandidates > 0 ? (totalShortlisted / totalCandidates) * 100 : 0;
+
+    // Calculate the individual percentages for calls
+    const answeredPercent =
+      totalCallsInitiated > 0
+        ? (totalCallsAnswered / totalCallsInitiated) * 100
+        : 0;
+    const completedPercent =
+      totalCallsInitiated > 0
+        ? (totalCallsCompleted / totalCallsInitiated) * 100
+        : 0;
+
+    const totalEngagement =
+      (answeredPercent + completedPercent + aiEngagementPercent) / 3;
+
+    // Prepare the response with the overall engagement percentage
+    const stats = {
+      overallEngagement: `${totalEngagement.toFixed(2)}%`,
+    };
+
+    res
+      .status(200)
+      .json(
+        successResponse("Total engagement stats fetched successfully", stats)
+      );
+    return;
+  } catch (error) {
+    console.error("Error in getting total engagement stats:", error);
     next(error);
   }
 };
