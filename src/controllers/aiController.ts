@@ -275,7 +275,6 @@ export const getTotalEngagementStats = async (
       return;
     }
 
-    // Initialize counters for different call statuses
     let totalCallsInitiated = 0;
     let totalCallsAnswered = 0;
     let totalCallsCompleted = 0;
@@ -291,20 +290,17 @@ export const getTotalEngagementStats = async (
         totalCallsAnswered += 1;
       }
 
-      // Count the number of shortlisted candidates
       if (feedback.status === "shortlisted") {
         totalShortlisted += 1;
       }
     });
 
-    // Fetch total number of candidates (resumes) for the specific user
     const totalCandidates = await ResumeModel.countDocuments({
       userId: userId,
     });
     const aiEngagementPercent =
       totalCandidates > 0 ? (totalShortlisted / totalCandidates) * 100 : 0;
 
-    // Calculate the individual percentages for calls
     const answeredPercent =
       totalCallsInitiated > 0
         ? (totalCallsAnswered / totalCallsInitiated) * 100
@@ -317,15 +313,13 @@ export const getTotalEngagementStats = async (
     const totalEngagement =
       (answeredPercent + completedPercent + aiEngagementPercent) / 3;
 
-    // Prepare the response with the overall engagement percentage
-    const stats = {
-      overallEngagement: `${totalEngagement.toFixed(2)}%`,
-    };
-
     res
       .status(200)
       .json(
-        successResponse("Total engagement stats fetched successfully", stats)
+        successResponse(
+          "Total engagement stats fetched successfully",
+          `${totalEngagement.toFixed(2)}%`
+        )
       );
     return;
   } catch (error) {
