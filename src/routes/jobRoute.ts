@@ -7,6 +7,7 @@ import {
   getClosedJob,
   getJob,
   getTotalCandidate,
+  getTotalRejectedCandidates,
   updateJob,
 } from "../controllers/jobController";
 import { authenticateUser } from "../middleware/authMiddleware";
@@ -21,5 +22,6 @@ router.delete("/delete-job/:id", authenticateUser, deleteJob);
 router.get("/jobs-active", authenticateUser, getActiveJob);
 router.get("/closed-jobs", authenticateUser, getClosedJob);
 router.get("/total-candidate", authenticateUser, getTotalCandidate);
+router.get("/rejected-candidate", authenticateUser, getTotalRejectedCandidates);
 
 export default router;

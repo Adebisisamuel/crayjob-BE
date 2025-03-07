@@ -327,3 +327,42 @@ export const getTotalCandidate = async (req: AuthRequest, res: Response) => {
     res.status(500).json("Internal Server Error");
   }
 };
+
+export const getTotalRejectedCandidates = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+
+    const jobs = await Job.find({ userId: req.user.id });
+    const jobIds = jobs.map((job) => job._id);
+
+    if (jobIds.length === 0) {
+      res.json(
+        successResponse("No rejected candidates found", {
+          totalRejectedCandidates: 0,
+        })
+      );
+      return;
+    }
+
+    const totalRejectedCandidates = await ResumeModel.countDocuments({
+      jobId: { $in: jobIds },
+      status: "rejected",
+    });
+
+    res.json(
+      successResponse("Total rejected candidates retrieved successfully", {
+        totalRejectedCandidates,
+      })
+    );
+    return;
+  } catch (error) {
+    console.log("Error fetching total rejected candidates", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+  }
+};
