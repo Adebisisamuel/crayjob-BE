@@ -140,8 +140,6 @@ export const bolnaCallback: any = async (
   try {
     const payload = req.body;
 
-    console.log(payload, "test callbacccccccccck");
-
     const candidateId = payload.context_details?.recipient_data?.candidate_id;
     const jobId = payload.context_details?.recipient_data?.job_id;
     const userId = payload.context_details?.recipient_data?.user_id;
