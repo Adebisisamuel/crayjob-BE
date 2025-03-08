@@ -15,4 +15,5 @@ router.delete("/delete-job/:id", authMiddleware_1.authenticateUser, jobControlle
 router.get("/jobs-active", authMiddleware_1.authenticateUser, jobController_1.getActiveJob);
 router.get("/closed-jobs", authMiddleware_1.authenticateUser, jobController_1.getClosedJob);
 router.get("/total-candidate", authMiddleware_1.authenticateUser, jobController_1.getTotalCandidate);
+router.get("/rejected-candidate", authMiddleware_1.authenticateUser, jobController_1.getTotalRejectedCandidates);
 exports.default = router;

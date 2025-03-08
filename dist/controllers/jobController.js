@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTotalCandidate = exports.getClosedJob = exports.getActiveJob = exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
+exports.getTotalRejectedCandidates = exports.getTotalCandidate = exports.getClosedJob = exports.getActiveJob = exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
 const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
@@ -292,3 +292,32 @@ const getTotalCandidate = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getTotalCandidate = getTotalCandidate;
+const getTotalRejectedCandidates = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const jobs = yield jobModel_1.Job.find({ userId: req.user.id });
+        const jobIds = jobs.map((job) => job._id);
+        if (jobIds.length === 0) {
+            res.json((0, responseHandler_1.successResponse)("No rejected candidates found", {
+                totalRejectedCandidates: 0,
+            }));
+            return;
+        }
+        const totalRejectedCandidates = yield resumeModel_1.default.countDocuments({
+            jobId: { $in: jobIds },
+            status: "rejected",
+        });
+        res.json((0, responseHandler_1.successResponse)("Total rejected candidates retrieved successfully", {
+            totalRejectedCandidates,
+        }));
+        return;
+    }
+    catch (error) {
+        console.log("Error fetching total rejected candidates", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.getTotalRejectedCandidates = getTotalRejectedCandidates;

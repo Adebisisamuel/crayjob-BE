@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bolnaCallback = exports.callCandidates = void 0;
+exports.getTotalEngagementStats = exports.bolnaCallback = exports.callCandidates = void 0;
 const axios_1 = __importDefault(require("axios"));
 const callFeedbackModel_1 = __importDefault(require("../models/callFeedbackModel"));
 const jobModel_1 = __importDefault(require("../models/jobModel"));
@@ -122,7 +122,6 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     try {
         const payload = req.body;
-        console.log(payload, "test callbacccccccccck");
         const candidateId = (_b = (_a = payload.context_details) === null || _a === void 0 ? void 0 : _a.recipient_data) === null || _b === void 0 ? void 0 : _b.candidate_id;
         const jobId = (_d = (_c = payload.context_details) === null || _c === void 0 ? void 0 : _c.recipient_data) === null || _d === void 0 ? void 0 : _d.job_id;
         const userId = (_f = (_e = payload.context_details) === null || _e === void 0 ? void 0 : _e.recipient_data) === null || _f === void 0 ? void 0 : _f.user_id;
@@ -214,3 +213,51 @@ const bolnaCallback = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.bolnaCallback = bolnaCallback;
+const getTotalEngagementStats = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        // Fetch feedbacks for the specific user
+        const feedbacks = yield callFeedbackModel_1.default.find({ userId: userId });
+        if (!feedbacks || feedbacks.length === 0) {
+            res.status(404).json({ message: "No feedback found." });
+            return;
+        }
+        let totalCallsInitiated = 0;
+        let totalCallsAnswered = 0;
+        let totalCallsCompleted = 0;
+        let totalShortlisted = 0;
+        feedbacks.forEach((feedback) => {
+            totalCallsInitiated += 1;
+            if (feedback.status === "completed" || feedback.status === "success") {
+                totalCallsCompleted += 1;
+            }
+            if (feedback.status === "initiated" || feedback.status === "ringing") {
+                totalCallsAnswered += 1;
+            }
+            if (feedback.status === "shortlisted") {
+                totalShortlisted += 1;
+            }
+        });
+        const totalCandidates = yield resumeModel_1.default.countDocuments({
+            userId: userId,
+        });
+        const aiEngagementPercent = totalCandidates > 0 ? (totalShortlisted / totalCandidates) * 100 : 0;
+        const answeredPercent = totalCallsInitiated > 0
+            ? (totalCallsAnswered / totalCallsInitiated) * 100
+            : 0;
+        const completedPercent = totalCallsInitiated > 0
+            ? (totalCallsCompleted / totalCallsInitiated) * 100
+            : 0;
+        const totalEngagement = (answeredPercent + completedPercent + aiEngagementPercent) / 3;
+        res
+            .status(200)
+            .json((0, responseHandler_1.successResponse)("Total engagement stats fetched successfully", `${totalEngagement.toFixed(2)}%`));
+        return;
+    }
+    catch (error) {
+        console.error("Error in getting total engagement stats:", error);
+        next(error);
+    }
+});
+exports.getTotalEngagementStats = getTotalEngagementStats;
