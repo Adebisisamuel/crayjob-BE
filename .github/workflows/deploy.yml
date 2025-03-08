@@ -37,5 +37,5 @@ jobs:
           application_name: "crayhunt-core"
           environment_name: "Crayhunt-core-env"
           region: ${{ secrets.AWS_REGION }}
-          version_label: ${{ github.sha }}
+          version_label: ${{ env.VERSION_LABEL }}
           deployment_package: deploy.zip
