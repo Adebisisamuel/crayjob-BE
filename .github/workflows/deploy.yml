@@ -25,6 +25,10 @@ jobs:
       - name: Zip Artifact
         run: zip -r deploy.zip dist/ package.json package-lock.json yarn.lock tsconfig.json # Add other necessary files
 
+      - name: Generate version label
+        id: version_label
+        run: echo "VERSION_LABEL=$(date +'%Y%m%d%H%M%S')-${{ github.sha }}" >> $GITHUB_ENV
+
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v19
         with:
