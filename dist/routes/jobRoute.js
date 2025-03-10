@@ -16,4 +16,6 @@ router.get("/jobs-active", authMiddleware_1.authenticateUser, jobController_1.ge
 router.get("/closed-jobs", authMiddleware_1.authenticateUser, jobController_1.getClosedJob);
 router.get("/total-candidate", authMiddleware_1.authenticateUser, jobController_1.getTotalCandidate);
 router.get("/rejected-candidate", authMiddleware_1.authenticateUser, jobController_1.getTotalRejectedCandidates);
+router.get("/total-jobs", authMiddleware_1.authenticateUser, jobController_1.getTotalJobCreated);
+router.get("/dashboard-stat", authMiddleware_1.authenticateUser, jobController_1.getDashboardStats);
 exports.default = router;

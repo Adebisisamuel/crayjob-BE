@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTotalRejectedCandidates = exports.getTotalCandidate = exports.getClosedJob = exports.getActiveJob = exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
+exports.getDashboardStats = exports.getTotalJobCreated = exports.getTotalRejectedCandidates = exports.getTotalCandidate = exports.getClosedJob = exports.getActiveJob = exports.deleteJob = exports.updateJob = exports.getJob = exports.getAllJob = exports.createJob = void 0;
 const jobModel_1 = require("../models/jobModel");
 const responseHandler_1 = require("../utils/responseHandler");
 const resumeModel_1 = __importDefault(require("../models/resumeModel"));
+const callFeedbackModel_1 = __importDefault(require("../models/callFeedbackModel"));
 const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, location, } = req.body;
@@ -150,7 +151,7 @@ const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
             return;
         }
-        const { companyName, jobTitle, jobDescription, locationType, location } = req.body;
+        const { companyName, jobTitle, jobDescription, screeningQuestions, locationType, location, } = req.body;
         if (locationType &&
             !["Remote", "On-site", "Hybrid"].includes(locationType)) {
             res
@@ -173,6 +174,8 @@ const updateJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             updateFields.jobTitle = jobTitle;
         if (jobDescription)
             updateFields.jobDescription = jobDescription;
+        if (screeningQuestions)
+            updateFields.screeningQuestions = screeningQuestions;
         if (locationType)
             updateFields.locationType = locationType;
         if (location)
@@ -321,3 +324,80 @@ const getTotalRejectedCandidates = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.getTotalRejectedCandidates = getTotalRejectedCandidates;
+const getTotalJobCreated = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const totalJob = yield jobModel_1.Job.find({ userId: req.user.id });
+        res
+            .status(200)
+            .json((0, responseHandler_1.successResponse)("Total Jobs retrieved successfully", { totalJob }));
+    }
+    catch (error) {
+        console.log("Error Getting all Jobs", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.getTotalJobCreated = getTotalJobCreated;
+const getDashboardStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            res.status(401).json((0, responseHandler_1.errorResponse)("Unauthorized"));
+            return;
+        }
+        const userId = req.user.id;
+        // Fetch all jobs by the user
+        const jobs = yield jobModel_1.Job.find({ userId });
+        const jobIds = jobs.map((job) => job._id);
+        // Get total job counts
+        const totalJobsCreated = jobs.length;
+        const totalActiveJobs = jobs.filter((job) => job.jobStatus === "active").length;
+        const totalClosedJobs = jobs.filter((job) => job.jobStatus === "closed").length;
+        // Get total candidates and rejected candidates count
+        const [totalCandidates, totalRejectedCandidates] = yield Promise.all([
+            resumeModel_1.default.countDocuments({ jobId: { $in: jobIds } }),
+            resumeModel_1.default.countDocuments({
+                jobId: { $in: jobIds },
+                status: "rejected",
+            }),
+        ]);
+        // Fetch engagement stats
+        const feedbacks = yield callFeedbackModel_1.default.find({ userId });
+        let totalCallsInitiated = feedbacks.length;
+        let totalCallsAnswered = 0;
+        let totalCallsCompleted = 0;
+        let totalShortlisted = 0;
+        feedbacks.forEach((feedback) => {
+            if (["completed", "success"].includes(feedback.status))
+                totalCallsCompleted++;
+            if (["initiated", "ringing"].includes(feedback.status))
+                totalCallsAnswered++;
+            if (feedback.status === "shortlisted")
+                totalShortlisted++;
+        });
+        // Calculate engagement percentages
+        const aiEngagementPercent = totalCandidates > 0 ? (totalShortlisted / totalCandidates) * 100 : 0;
+        const answeredPercent = totalCallsInitiated > 0
+            ? (totalCallsAnswered / totalCallsInitiated) * 100
+            : 0;
+        const completedPercent = totalCallsInitiated > 0
+            ? (totalCallsCompleted / totalCallsInitiated) * 100
+            : 0;
+        const totalEngagement = (answeredPercent + completedPercent + aiEngagementPercent) / 3;
+        res.status(200).json((0, responseHandler_1.successResponse)("Dashboard stats retrieved successfully", {
+            totalJobsCreated,
+            totalActiveJobs,
+            totalClosedJobs,
+            totalCandidates,
+            totalRejectedCandidates,
+            totalEngagement: `${totalEngagement.toFixed(2)}%`,
+        }));
+    }
+    catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        res.status(500).json((0, responseHandler_1.errorResponse)("Internal Server Error"));
+    }
+});
+exports.getDashboardStats = getDashboardStats;
