@@ -3,6 +3,7 @@ import { IJob, Job } from "../models/jobModel";
 import { AuthRequest } from "../Types/authTypes";
 import { successResponse, errorResponse } from "../utils/responseHandler";
 import ResumeModel from "../models/resumeModel";
+import CallFeedback from "../models/callFeedbackModel";
 
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
@@ -167,8 +168,14 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { companyName, jobTitle, jobDescription, locationType, location } =
-      req.body;
+    const {
+      companyName,
+      jobTitle,
+      jobDescription,
+      screeningQuestions,
+      locationType,
+      location,
+    } = req.body;
 
     if (
       locationType &&
@@ -198,6 +205,8 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     if (companyName) updateFields.companyName = companyName;
     if (jobTitle) updateFields.jobTitle = jobTitle;
     if (jobDescription) updateFields.jobDescription = jobDescription;
+    if (screeningQuestions)
+      updateFields.screeningQuestions = screeningQuestions;
     if (locationType) updateFields.locationType = locationType;
     if (location) updateFields.location = location;
 
@@ -363,6 +372,99 @@ export const getTotalRejectedCandidates = async (
     return;
   } catch (error) {
     console.log("Error fetching total rejected candidates", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+  }
+};
+
+export const getTotalJobCreated = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+    const totalJob = await Job.find({ userId: req.user.id });
+    res
+      .status(200)
+      .json(successResponse("Total Jobs retrieved successfully", { totalJob }));
+  } catch (error) {
+    console.log("Error Getting all Jobs", error);
+    res.status(500).json(errorResponse("Internal Server Error"));
+  }
+};
+
+export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json(errorResponse("Unauthorized"));
+      return;
+    }
+
+    const userId = req.user.id;
+
+    // Fetch all jobs by the user
+    const jobs = await Job.find({ userId });
+    const jobIds = jobs.map((job) => job._id);
+
+    // Get total job counts
+    const totalJobsCreated = jobs.length;
+    const totalActiveJobs = jobs.filter(
+      (job) => job.jobStatus === "active"
+    ).length;
+    const totalClosedJobs = jobs.filter(
+      (job) => job.jobStatus === "closed"
+    ).length;
+
+    // Get total candidates and rejected candidates count
+    const [totalCandidates, totalRejectedCandidates] = await Promise.all([
+      ResumeModel.countDocuments({ jobId: { $in: jobIds } }),
+      ResumeModel.countDocuments({
+        jobId: { $in: jobIds },
+        status: "rejected",
+      }),
+    ]);
+
+    // Fetch engagement stats
+    const feedbacks = await CallFeedback.find({ userId });
+
+    let totalCallsInitiated = feedbacks.length;
+    let totalCallsAnswered = 0;
+    let totalCallsCompleted = 0;
+    let totalShortlisted = 0;
+
+    feedbacks.forEach((feedback) => {
+      if (["completed", "success"].includes(feedback.status))
+        totalCallsCompleted++;
+      if (["initiated", "ringing"].includes(feedback.status))
+        totalCallsAnswered++;
+      if (feedback.status === "shortlisted") totalShortlisted++;
+    });
+
+    // Calculate engagement percentages
+    const aiEngagementPercent =
+      totalCandidates > 0 ? (totalShortlisted / totalCandidates) * 100 : 0;
+    const answeredPercent =
+      totalCallsInitiated > 0
+        ? (totalCallsAnswered / totalCallsInitiated) * 100
+        : 0;
+    const completedPercent =
+      totalCallsInitiated > 0
+        ? (totalCallsCompleted / totalCallsInitiated) * 100
+        : 0;
+    const totalEngagement =
+      (answeredPercent + completedPercent + aiEngagementPercent) / 3;
+
+    res.status(200).json(
+      successResponse("Dashboard stats retrieved successfully", {
+        totalJobsCreated,
+        totalActiveJobs,
+        totalClosedJobs,
+        totalCandidates,
+        totalRejectedCandidates,
+        totalEngagement: `${totalEngagement.toFixed(2)}%`,
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
     res.status(500).json(errorResponse("Internal Server Error"));
   }
 };

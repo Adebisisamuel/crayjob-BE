@@ -5,8 +5,10 @@ import {
   getActiveJob,
   getAllJob,
   getClosedJob,
+  getDashboardStats,
   getJob,
   getTotalCandidate,
+  getTotalJobCreated,
   getTotalRejectedCandidates,
   updateJob,
 } from "../controllers/jobController";
@@ -23,5 +25,7 @@ router.get("/jobs-active", authenticateUser, getActiveJob);
 router.get("/closed-jobs", authenticateUser, getClosedJob);
 router.get("/total-candidate", authenticateUser, getTotalCandidate);
 router.get("/rejected-candidate", authenticateUser, getTotalRejectedCandidates);
+router.get("/total-jobs", authenticateUser, getTotalJobCreated);
+router.get("/dashboard-stat", authenticateUser, getDashboardStats);
 
 export default router;
